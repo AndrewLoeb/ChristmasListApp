@@ -1,0 +1,70 @@
+﻿@using WebApplication1.Models
+@using WebApplication1.Services
+@using WebApplication1.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject userIdService UserIdService
+
+
+@if (!showLists)
+{
+    <h3>Login</h3>
+    <div>
+        <select @bind="userId">
+            <option value="">Select Elf... </option>
+            <option value="Andrew">Andrew</option>
+            <option value="Bill">Bill</option>
+            <option value="Maddie">Maddie</option>
+        </select>
+
+        <form> Enter Password: <input type="password" @bind="password" /> </form>
+        <button @onclick="Set_ShowLists">Activate!</button>
+    </div>
+}
+
+@if (showLists)
+{
+    <h3> Welcome @UserIdService.userId!</h3>
+    <button @onclick="Set_MyList">My List</button>
+    <button @onclick="Set_ListReview">List Review</button>
+    <button @onclick="Set_MyGifts">My Gifts</button>
+    @if (tabIndex == 1)
+    {
+        <MyList></MyList>
+    }
+    @if (tabIndex == 2)
+    {
+        <ListReview></ListReview>
+    }
+    @if (tabIndex == 3)
+    {
+        <MyGifts></MyGifts>
+    }
+}
+
+
+@code {
+
+    public string userId = "";
+    public string password { get; set; }
+    public bool showLists = false;
+    public int tabIndex = 0;
+
+    public async Task Set_ShowLists()
+    {
+        await UserIdService.SetUser(userId);
+        if (password.Equals("abc"))
+        {
+            showLists = true;
+            tabIndex = 1;
+
+
+        }
+    }
+
+    public async Task Set_MyList()
+    { tabIndex = 1; }
+    public async Task Set_ListReview()
+    { tabIndex = 2; }
+    public async Task Set_MyGifts()
+    { tabIndex = 3; }
+}

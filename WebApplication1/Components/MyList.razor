@@ -1,0 +1,73 @@
+﻿@using WebApplication1.Models
+@using WebApplication1.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject googleSheetsListService ListService
+@inject userIdService UserIdService
+
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@inject IToastService toastService
+
+@inherits Login
+
+<BlazoredToasts Timeout="5"
+                ShowProgressBar="true"
+                IconType="IconType.FontAwesome"
+                SuccessClass="success-toast-override"
+                SuccessIcon="fa fa-bar-chart" />
+
+@{var badgeType1 = "";
+    var badgeType2 = ""; }
+<div class="card-columns">
+    @foreach (ItemModel item in ListService.GetMyList(UserIdService.userId))
+    {
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    @item.Item
+                    <br />
+                </h5>
+
+            </div>
+            <div class="card-footer">
+                <button> Claim! </button>
+                <small class="text-muted">
+                    Added to List on XXX
+                </small>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code
+{
+
+    UserModel selectedSpice;
+    string selectedSpiceName;
+    Random random = new Random();
+    List<string> pinchList = new List<string> { "a pinch", "a dash", "a shake", "a bit", "a little bit", "a few sprinkles", "an essence", "just the right amount",
+                     "a ton", "a touch", "a hit", "a blast", "some", "an amount"};
+
+    void SelectSpice(string spiceName)
+    {
+        selectedSpiceName = spiceName;
+        selectedSpice = ListService.Users_GetList().First(x => x.Name == spiceName);
+
+
+        int index = random.Next(pinchList.Count);
+        toastService.ShowSuccess("Logged " + pinchList[index] + " of " + spiceName, "Yum!");
+        PrintSpiceName();
+    }
+
+    int currentRating = 0;
+    int voteCount = 0;
+    string voteLabel;
+
+    void PrintSpiceName()
+    {
+        System.Console.WriteLine($"You clicked: {selectedSpice.Name}");
+        //SpiceService.AddLog(selectedSpice.Name);
+    }
+
+}

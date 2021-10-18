@@ -348,3 +348,11 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Python Tools for Visual Studio (PTVS)
+__pycache__/
+*.pyc
+/BlazorApp/credentials.json
+/BlazorApp/app_client_secret.json
+/WebApplication1/credentials.json
+/WebApplication1/app_client_secret.json
