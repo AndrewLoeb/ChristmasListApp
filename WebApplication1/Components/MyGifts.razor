@@ -1,6 +1,31 @@
-﻿<h3>My Gifts</h3>
-<h3>Coming Soon!</h3>
+﻿@using WebApplication1.Models
+@using WebApplication1.Services
+@using WebApplication1.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject googleSheetsListService ListService
+@inject userIdService UserIdService
+
+@inherits Login
+
+<h2>My Gifts</h2>
+<table>
+    <tr>
+        <th width="200">Elf</th>
+        <th width="400">Item</th>
+        <th>Link</th>
+        <th width="200">Date Claimed</th>
+    </tr>
+    @foreach (ItemModel item in myGifts)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Item</td>
+            <td>@item.Link</td>
+            <td>@item.DateClaimed</td>
+        </tr>
+    }
+</table>
 
 @code {
-
+    public dynamic myGifts => ListService.GetAllLists().Where(i => i.Claimer == UserIdService.userId).Where(i => i.Active == 1);
 }

@@ -21,19 +21,17 @@
 <h2>My List</h2>
 <table>
     <tr>
-        <th></th>
-        <th>Item</th>
+        <th width="400">Item</th>
         <th>Link</th>
-        <th>Date Added</th>
-        <th></th>
-        <th></th>
+        <th width="200">Date Added</th>
+        <th width="50"></th>
+        <th width="50"></th>
     </tr>
     @foreach (ItemModel item in myList)
     {
         @if (@item.ItemId == editItemId)
         {
             <tr>
-                <td>@item.ItemId</td>
                 <td> <form> <input type="text" @bind="@item.Item" onclick="this.select();" /> </form> </td>
                 <td><form>  <input type="text" @bind="@item.Link" onclick="this.select();" size="15" /> </form></td>
                 <td></td>
@@ -44,7 +42,6 @@
         else
         {
             <tr>
-                <td>@item.ItemId</td>
                 <td>@item.Item</td>
                 <td><a href="@item.Link" target="_blank"> @item.Link</a></td>
                 <td>@item.DateUpdated</td>
