@@ -1,5 +1,6 @@
 ﻿@using WebApplication1.Models
 @using WebApplication1.Services
+@using WebApplication1.Components
 @using Microsoft.AspNetCore.Components.Web
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
@@ -8,37 +9,86 @@
 @using Blazored.Toast.Services
 @inject IToastService toastService
 
-<h3>List Review</h3>
-<h3> Coming Soon!</h3>
+@inherits Login
 
-@{var badgeType1 = "";
-    var badgeType2 = ""; }
+<BlazoredToasts Timeout="5"
+                ShowProgressBar="true"
+                IconType="IconType.FontAwesome"
+                SuccessClass="success-toast-override"
+                SuccessIcon="fa fa-bar-chart" />
 
-<br />
+<h2>List Review</h2>
+
 <div>
-    <h4>Add Item: </h4>
+    <select @bind="listUserId">
+        <option value="">Select Elf... </option>
+        @foreach (UserModel user in userList)
+        {
+            @if (user.Name != UserIdService.userId)
+            {
+                <option value="@user.Name">  @user.Name </option>
+            }
+        }
+    </select>
 </div>
-<div class="card-columns">
-    @foreach (ItemModel item in ListService.GetMyList(UserIdService.userId))
-    {
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    @item.Item
-                    <br />
-                </h5>
 
-            </div>
-            <div class="card-footer">
-                <button> Claim! </button>
-                <small class="text-muted">
-                    Added to List on XXX
-                </small>
-            </div>
-        </div>
+@if (listUserId != "")
+{
+    <div>
+        <h3> @listUserId's List: </h3>
+    </div>
+    <div class="card-columns">
+        @foreach (ItemModel item in ListService.GetMyList(listUserId))
+        {
+            <div class="card">
+                <div class="card-body" style="position:relative">
+                    <h5 class="card-title">
+                        @item.Item
+                        <br />
+                        @if (item.Link != "")
+                        {<span class="badge badge-info"> Link </span>}
+                    </h5>
+                    @if (item.Link != "")
+                    {<a href="@item.Link" target="_blank" class="stretched-link"></a>}
+
+                </div>
+                <div class="card-footer">
+                    @if (item.Claimer == UserIdService.userId)
+                    {<div> <button @onclick="() => unclaimItem(item)">Unclaim</button> </div>}
+                    else if (item.Claimer == "")
+                    {<div>    <button @onclick="() => claimItem(item)">Claim!</button> </div>}
+    else
+    {
+    {<span class="badge badge-primary"> Claimed </span>}
     }
+    <small class="text-muted">
+        Updated at @item.DateUpdated
+    </small>
 </div>
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    <h3>Notes:</h3>
+    <p> @listUserNotes </p>
+}
 
 @code {
+    public string listUserId = "";
+    public List<UserModel> userList => ListService.Users_GetList();
 
+    public dynamic listUserNotes => ListService.Users_GetList().FirstOrDefault(u => u.Name == listUserId).Notes;
+
+    public void claimItem(ItemModel item)
+    {
+        ListService.ClaimItem(item.ItemId, UserIdService.userId);
+        toastService.ShowSuccess("You claimed " + item.Item + " for " + listUserId + "!");
+    }
+    public void unclaimItem(ItemModel item)
+    {
+        ListService.UnclaimItem(item.ItemId);
+        toastService.ShowInfo("Unclaimed " + item.Item);
+    }
 }

@@ -2,6 +2,7 @@
 @using WebApplication1.Services
 @using WebApplication1.Components
 @using Microsoft.AspNetCore.Components.Web
+@inject googleSheetsListService ListService
 @inject userIdService UserIdService
 
 
@@ -11,9 +12,10 @@
     <div>
         <select @bind="userId">
             <option value="">Select Elf... </option>
-            <option value="Andrew">Andrew</option>
-            <option value="Bill">Bill</option>
-            <option value="Maddie">Maddie</option>
+            @foreach (UserModel user in userList)
+            {
+                <option value="@user.Name">  @user.Name </option>
+            }
         </select>
 
         <form> Enter Password: <input type="password" @bind="password" /> </form>
@@ -48,6 +50,8 @@
     public string password { get; set; }
     public bool showLists = false;
     public int tabIndex = 0;
+
+    public List<UserModel> userList => ListService.Users_GetList();
 
     public async Task Set_ShowLists()
     {

@@ -83,6 +83,21 @@ namespace WebApplication1.Services
 
             return myUserList;
         }
+        public void UpdateNotes(string userId, string newNotes)
+        {
+            //var myInvList = Spices_GetList();
+            List<UserModel> AllUsers = Users_GetList();
+            int userId2 = AllUsers.FirstOrDefault(u => u.Name == userId).Id;
+
+            var range = $"{usersSheet}!D{userId2 + 1}:D{userId2 + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { newNotes };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
         public List<ItemModel> GetAllLists()
         {
             var AllLists = new List<ItemModel>();
@@ -205,6 +220,29 @@ namespace WebApplication1.Services
             var range = $"{itemSheet}!H{itemId+1}:H{itemId+1}";
             var valueRange = new ValueRange();
             var oblist = new List<object>() { 0 };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
+        public void ClaimItem(int itemId, string claimerId)
+        {
+            var range = $"{itemSheet}!F{itemId + 1}:G{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { claimerId, DateTime.Now };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+        public void UnclaimItem(int itemId)
+        {
+            var range = $"{itemSheet}!F{itemId + 1}:G{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { "", "" };
             valueRange.Values = new List<IList<object>> { oblist };
             // Performing Update Operation...
             var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
