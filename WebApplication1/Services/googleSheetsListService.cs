@@ -83,10 +83,51 @@ namespace WebApplication1.Services
 
             return myUserList;
         }
+        public List<ItemModel> GetAllLists()
+        {
+            var AllLists = new List<ItemModel>();
+            var range = $"{itemSheet}!A:H";
+            int j = 0;
+            SpreadsheetsResource.ValuesResource.GetRequest request =
+                    service.Spreadsheets.Values.Get(SpreadsheetId, range);
+            // Ecexuting Read Operation...
+            var response = request.Execute();
+            // Getting all records from Column A to E...
+            IList<IList<object>> values = response.Values;
+            if (values != null && values.Count > 0)
+            {
+                foreach (var row in values)
+                {
+                    j++;
+                    if (j > 1)
+                    {
+                        var myItem = new ItemModel()
+                        {
+                            ItemId = Int32.Parse(row[0].ToString()),
+                            Name = row[1].ToString(),
+                            Item = row[2].ToString(),
+                            Link = row[3].ToString(),
+                            DateUpdated = row[4].ToString(),
+                            Claimer = row[5].ToString(),
+                            DateClaimed = row[6].ToString(),
+                            Active = Int32.Parse(row[7].ToString()),
+                        };
+
+                        AllLists.Add(myItem);
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error reading data.");
+            }
+
+            return AllLists;
+        }
         public List<ItemModel> GetMyList(string userId)
         {
             var MyList = new List<ItemModel>();
-            var range = $"{itemSheet}!A:G";
+            var range = $"{itemSheet}!A:H";
             int j = 0;
             SpreadsheetsResource.ValuesResource.GetRequest request =
                     service.Spreadsheets.Values.Get(SpreadsheetId, range);
@@ -110,9 +151,13 @@ namespace WebApplication1.Services
                             DateUpdated = row[4].ToString(),
                             Claimer = row[5].ToString(),
                             DateClaimed = row[6].ToString(),
+                            Active = Int32.Parse(row[7].ToString()),
                         };
 
-                        MyList.Add(myItem);
+                        if (myItem.Active == 1)
+                        {
+                            MyList.Add(myItem);
+                        }
                     }
                 }
             }
@@ -124,28 +169,51 @@ namespace WebApplication1.Services
             return MyList;
         }
 
-
-        public void AddLog(string Name)
+        public void AddItem(string userId, string newItemItem, string newItemLink)
         {
             // Specifying Column Range for reading...
-            var range = $"{itemSheet}!A:B";
+            var range = $"{itemSheet}!A:H";
             var valueRange = new ValueRange();
             int mynewID = 1;
-            
-            //var myInvList = Spices_GetList();
 
-            var oblist = new List<object>() {Name, DateTime.Now};
-            valueRange.Values = new List<IList<object>> { oblist };
+            //var myInvList = Spices_GetList();
+            List<ItemModel> AllLists = GetAllLists();
+            int maxId = AllLists.Max(i => i.ItemId);
+
+            var newItem = new List<object>() { maxId+1, userId, newItemItem, newItemLink, DateTime.Now, "", "", 1 };
+            valueRange.Values = new List<IList<object>> { newItem };
             // Append the above record...
             var appendRequest = service.Spreadsheets.Values.Append(valueRange, SpreadsheetId, range);
             appendRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.AppendRequest.ValueInputOptionEnum.USERENTERED;
             var appendReponse = appendRequest.Execute();
         }
 
+        public void UpdateItem(int itemId, string itemItem, string itemLink)
+        {
+            var range = $"{itemSheet}!C{itemId + 1}:E{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { itemItem, itemLink, DateTime.Now };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
+        public void DeleteItem(int itemId)
+        {
+            var range = $"{itemSheet}!H{itemId+1}:H{itemId+1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { 0 };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
         public void UpdateInvoice(SpiceModel Spice)
         {
-
-
             int rowID = 0;
             var range = $"{itemSheet}!A:D";
             int j = 0;

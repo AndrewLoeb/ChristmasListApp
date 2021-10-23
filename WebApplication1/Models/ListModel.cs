@@ -29,5 +29,6 @@ namespace WebApplication1.Models
         public string DateUpdated { get; set; }
         public string Claimer { get; set; }
         public string DateClaimed { get; set; }
+        public int Active { get; set; }
     }
 }

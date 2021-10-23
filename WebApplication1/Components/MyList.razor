@@ -1,5 +1,6 @@
 ﻿@using WebApplication1.Models
 @using WebApplication1.Services
+@using WebApplication1.Components
 @using Microsoft.AspNetCore.Components.Web
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
@@ -18,30 +19,88 @@
 
 @{var badgeType1 = "";
     var badgeType2 = ""; }
-<div class="card-columns">
-    @foreach (ItemModel item in ListService.GetMyList(UserIdService.userId))
-    {
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    @item.Item
-                    <br />
-                </h5>
 
-            </div>
-            <div class="card-footer">
-                <button> Claim! </button>
-                <small class="text-muted">
-                    Added to List on XXX
-                </small>
-            </div>
-        </div>
+<br />
+<table>
+    <tr>
+        <th></th>
+        <th>Item</th>
+        <th>Link</th>
+        <th>Date Added</th>
+        <th></th>
+        <th></th>
+    </tr>
+    @foreach (ItemModel item in myList)
+    {
+        @if (@item.ItemId == editItemId)
+        {
+            <tr>
+                <td>@item.ItemId</td>
+                <td> <form> <input type="text" @bind="@item.Item" onclick="this.select();" /> </form> </td>
+                <td><form>  <input type="text" @bind="@item.Link" onclick="this.select();" /> </form></td>
+                <td></td>
+                <td>    <button @onclick="() => submitEditItem(item)">Save</button> </td>
+                <td> </td>
+            </tr>
+}
+        else {
+            <tr>
+                <td>@item.ItemId</td>
+                <td>@item.Item</td>
+                <td><a href="@item.Link" target="_blank"> @item.Link</a></td>
+                <td>@item.DateUpdated</td>
+                <td>    <button @onclick="() => editItem(item)">Edit</button> </td>
+                <td>    <button @onclick="() => deleteItem(item)">Delete</button> </td>
+            </tr>
+        }
     }
+</table>
+<br />
+<div>
+    Add Item: <form> <input type="text" @bind="newItemItem" onclick="this.select();" /> <input type="text" @bind="newItemLink" onclick="this.select();" /> </form>
+    <button @onclick="addItem">Add</button>
 </div>
 
 
 @code
 {
+
+    //public List<ItemModel> myList = new List<ItemModel>();
+
+    public dynamic myList => ListService.GetMyList(UserIdService.userId);
+
+    public string newItemItem = "New Item";
+    public string newItemLink = "Link (Optional)";
+
+    public int editItemId = 0;
+
+    public void addItem()
+    {
+        System.Console.WriteLine($"Added: {newItemItem}");
+
+        if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
+
+        ListService.AddItem(UserIdService.userId, newItemItem, newItemLink);
+
+        newItemItem = "New Item";
+        newItemLink = "Link (Optional)";
+    }
+
+    public void editItem(ItemModel item)
+    {
+        editItemId = item.ItemId;
+    }
+    public void submitEditItem(ItemModel item)
+    {
+        ListService.UpdateItem(item.ItemId, item.Item, item.Link);
+        editItemId = 0;
+    }
+
+    public void deleteItem(ItemModel item)
+    {
+        ListService.DeleteItem(item.ItemId);
+    }
+
 
     UserModel selectedSpice;
     string selectedSpiceName;
@@ -59,10 +118,6 @@
         toastService.ShowSuccess("Logged " + pinchList[index] + " of " + spiceName, "Yum!");
         PrintSpiceName();
     }
-
-    int currentRating = 0;
-    int voteCount = 0;
-    string voteLabel;
 
     void PrintSpiceName()
     {

@@ -1,5 +1,43 @@
-﻿<h3>List Review</h3>
+﻿@using WebApplication1.Models
+@using WebApplication1.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject googleSheetsListService ListService
+@inject userIdService UserIdService
+
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@inject IToastService toastService
+
+<h3>List Review</h3>
 <h3> Coming Soon!</h3>
+
+@{var badgeType1 = "";
+    var badgeType2 = ""; }
+
+<br />
+<div>
+    <h4>Add Item: </h4>
+</div>
+<div class="card-columns">
+    @foreach (ItemModel item in ListService.GetMyList(UserIdService.userId))
+    {
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    @item.Item
+                    <br />
+                </h5>
+
+            </div>
+            <div class="card-footer">
+                <button> Claim! </button>
+                <small class="text-muted">
+                    Added to List on XXX
+                </small>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
 
