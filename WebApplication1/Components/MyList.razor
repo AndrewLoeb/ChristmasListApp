@@ -19,62 +19,79 @@
 
 
 <h2>My List</h2>
-<table>
-    <tr>
-        <th width="400">Item</th>
-        <th>Link</th>
-        <th width="200">Date Added</th>
-        <th width="50"></th>
-        <th width="50"></th>
-    </tr>
-    @foreach (ItemModel item in myList)
+<div class="table-responsive-md">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th width="150px"></th>
+                <th width="400px">Item</th>
+                <th width="200px">Link</th>
+                <th width="200px">Date Added</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (ItemModel item in myList)
     {
-        @if (@item.ItemId == editItemId)
+            @if (@item.ItemId == editItemId)
         {
             <tr>
-                <td> <form> <input type="text" @bind="@item.Item" onclick="this.select();" /> </form> </td>
-                <td><form>  <input type="text" @bind="@item.Link" onclick="this.select();" size="15" /> </form></td>
+                <td>    <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)">Save</button> </td>
+                <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" /> </form> </td>
+                <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" /> </form></td>
                 <td></td>
-                <td>    <button @onclick="() => submitEditItem(item)">Save</button> </td>
-                <td> </td>
             </tr>
         }
         else
         {
-            <tr>
-                <td>@item.Item</td>
-                <td><a href="@item.Link" target="_blank"> @item.Link</a></td>
-                <td>@item.DateUpdated</td>
-                <td>    <button @onclick="() => editItem(item)">Edit</button> </td>
-                <td>    <button @onclick="() => deleteItem(item)">Delete</button> </td>
-            </tr>
+        <tr>
+            <td>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)">Edit</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => deleteItem(item)">Delete</button>
+                </div>
+            </td>
+            <td>@item.Item</td>
+            <td style="word-wrap:break-word; max-width:400px"><a href="@item.Link" target="_blank"> @item.Link</a></td>
+            <td>@item.DateUpdated</td>
+        </tr>
         }
     }
-</table>
-<br />
-<div>
-    Add Item: <form>
-        <input type="text" @bind="newItemItem" onclick="this.select();" />
-        <input type="text" @bind="newItemLink" onclick="this.select();" size="15" />
-    </form>
-    <button @onclick="addItem">Add</button>
+        </tbody>
+    </table>
 </div>
+    <br />
+    <div>
+        Add Item: 
+        <form>
+            <div class="form-row">
+                <div class="col">
+                    <input type="text" class="form-control" @bind="newItemItem" onclick="this.select();" />
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" @bind="newItemLink" onclick="this.select();" size="15" />
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-success" @onclick="addItem">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
 
-<hr />
-<h3>Notes to Share:</h3>
-@if (editNotesFlag == 0)
+    <hr />
+    <h3>Notes to Share:</h3>
+    @if (editNotesFlag == 0)
 {
     <p> @myNotes </p>
-    <button @onclick="editNotes">Edit Notes</button>
+    <button type="button" class="btn btn-secondary" @onclick="editNotes">Edit Notes</button>
 }
 else
 {
-    <textarea cols="40" rows="5" @bind="newNotes"></textarea>
-    <button @onclick="submitEditNotes">Save Notes</button>
+    <textarea class="form-control" cols="40" rows="5" @bind="newNotes"></textarea>
+    <button type="button" class="btn btn-success" @onclick="submitEditNotes">Save Notes</button>
 }
 
 
-@code
+    @code
 {
 
     public dynamic myList => ListService.GetMyList(UserIdService.userId);
@@ -125,7 +142,7 @@ else
     public void deleteItem(ItemModel item)
     {
         ListService.DeleteItem(item.ItemId);
-        toastService.ShowSuccess("Saved " + item.ItemId + "!");
+        toastService.ShowSuccess("Deleted " + item.Item + "!");
     }
 
-}
+    }

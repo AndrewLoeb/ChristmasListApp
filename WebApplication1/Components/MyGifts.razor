@@ -8,22 +8,26 @@
 @inherits Login
 
 <h2>My Gifts</h2>
-<table>
-    <tr>
-        <th width="200">Elf</th>
-        <th width="400">Item</th>
-        <th>Link</th>
-        <th width="200">Date Claimed</th>
-    </tr>
-    @foreach (ItemModel item in myGifts)
-    {
+<table class="table table-striped">
+    <thead>
         <tr>
-            <td>@item.Name</td>
-            <td>@item.Item</td>
-            <td>@item.Link</td>
-            <td>@item.DateClaimed</td>
+            <th width="200">Elf</th>
+            <th width="400">Item</th>
+            <th>Link</th>
+            <th width="200">Date Claimed</th>
         </tr>
-    }
+    </thead>
+    <tbody>
+        @foreach (ItemModel item in myGifts)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Item</td>
+                <td>@item.Link</td>
+                <td>@item.DateClaimed</td>
+            </tr>
+        }
+    </tbody>
 </table>
 
 @code {
