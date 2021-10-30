@@ -49,7 +49,7 @@ namespace WebApplication1.Services
         public List<UserModel> Users_GetList()
         {
             var myUserList = new List<UserModel>();
-            var range = $"{usersSheet}!A:D";
+            var range = $"{usersSheet}!A:E";
             int j = 0;
             SpreadsheetsResource.ValuesResource.GetRequest request =
                     service.Spreadsheets.Values.Get(SpreadsheetId, range);
@@ -69,7 +69,8 @@ namespace WebApplication1.Services
                             Id = Int32.Parse(row[0].ToString()),
                             Family = row[1].ToString(),
                             Name = row[2].ToString(),
-                            Notes = row[3].ToString(),
+                            Password = row[3].ToString(),
+                            Notes = row[4].ToString(),
                         };
 
                         myUserList.Add(myInv);
@@ -89,7 +90,7 @@ namespace WebApplication1.Services
             List<UserModel> AllUsers = Users_GetList();
             int userId2 = AllUsers.FirstOrDefault(u => u.Name == userId).Id;
 
-            var range = $"{usersSheet}!D{userId2 + 1}:D{userId2 + 1}";
+            var range = $"{usersSheet}!E{userId2 + 1}:E{userId2 + 1}";
             var valueRange = new ValueRange();
             var oblist = new List<object>() { newNotes };
             valueRange.Values = new List<IList<object>> { oblist };

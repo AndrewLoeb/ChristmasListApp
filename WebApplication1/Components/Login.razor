@@ -10,20 +10,21 @@
 {
 <h3>Login</h3>
 <div>
-    <select class="form-control" @bind="userId">
-        <option value="">Select Elf... </option>
-        @foreach (UserModel user in userList)
-            {
-        <option value="@user.Name">  @user.Name </option>
-            }
-    </select>
 
     <form>
-        Enter Password:
-
         <div class="form-row">
             <div class="col">
-                <input type="password" class="form-control" @bind="password" size="20"/>
+
+                <select class="form-control" @bind="userId">
+                    <option value="">Select Elf... </option>
+                    @foreach (UserModel user in userList)
+            {
+                    <option value="@user.Name">  @user.Name </option>
+            }
+                </select>
+            </div>
+            <div class="col">
+                <input type="password" placeholder="Enter Password" class="form-control" @bind="password" size="20"/>
             </div>
             <div class="col">
                 <button type="button" class="btn btn-success" @onclick="Set_ShowLists">Activate!</button>
@@ -33,26 +34,31 @@
 </div>
 }
 
+
 @if (showLists)
 {
 <h3> Welcome @UserIdService.userId!</h3>
-    <div class="btn-group" role="group">
+    <div class="btn-group btn-group-lg" role="group">
     <button type="button" class="btn btn-outline-secondary" @onclick="Set_MyList">My List</button>
     <button type="button" class="btn btn-outline-secondary" @onclick="Set_ListReview">List Review</button>
     <button type="button" class="btn btn-outline-secondary" @onclick="Set_MyGifts">My Gifts</button>
     </div>
-    @if (tabIndex == 1)
+    <br />
+
+    <div>
+        @if (tabIndex == 1)
     {
         <MyList></MyList>
     }
-    @if (tabIndex == 2)
+        @if (tabIndex == 2)
     {
         <ListReview></ListReview>
     }
-    @if (tabIndex == 3)
+        @if (tabIndex == 3)
     {
         <MyGifts></MyGifts>
     }
+    </div>
 }
 
 
@@ -68,7 +74,8 @@
     public async Task Set_ShowLists()
     {
         await UserIdService.SetUser(userId);
-        if (password.Equals("cheer"))
+
+        if (password.Equals(userList.Where(u => u.Name.Equals( userId)).Select(u => u.Password).FirstOrDefault()))
         {
             showLists = true;
             tabIndex = 1;
