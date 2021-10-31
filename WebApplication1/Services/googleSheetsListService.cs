@@ -102,7 +102,7 @@ namespace WebApplication1.Services
         public List<ItemModel> GetAllLists()
         {
             var AllLists = new List<ItemModel>();
-            var range = $"{itemSheet}!A:H";
+            var range = $"{itemSheet}!A:I";
             int j = 0;
             SpreadsheetsResource.ValuesResource.GetRequest request =
                     service.Spreadsheets.Values.Get(SpreadsheetId, range);
@@ -122,11 +122,12 @@ namespace WebApplication1.Services
                             ItemId = Int32.Parse(row[0].ToString()),
                             Name = row[1].ToString(),
                             Item = row[2].ToString(),
-                            Link = row[3].ToString(),
-                            DateUpdated = row[4].ToString(),
-                            Claimer = row[5].ToString(),
-                            DateClaimed = row[6].ToString(),
-                            Active = Int32.Parse(row[7].ToString()),
+                            Notes = row[3].ToString(),
+                            Link = row[4].ToString(),
+                            DateUpdated = row[5].ToString(),
+                            Claimer = row[6].ToString(),
+                            DateClaimed = row[7].ToString(),
+                            Active = Int32.Parse(row[8].ToString()),
                         };
 
                         AllLists.Add(myItem);
@@ -143,7 +144,7 @@ namespace WebApplication1.Services
         public List<ItemModel> GetMyList(string userId)
         {
             var MyList = new List<ItemModel>();
-            var range = $"{itemSheet}!A:H";
+            var range = $"{itemSheet}!A:I";
             int j = 0;
             SpreadsheetsResource.ValuesResource.GetRequest request =
                     service.Spreadsheets.Values.Get(SpreadsheetId, range);
@@ -163,11 +164,12 @@ namespace WebApplication1.Services
                             ItemId = Int32.Parse(row[0].ToString()),
                             Name = row[1].ToString(),
                             Item = row[2].ToString(),
-                            Link = row[3].ToString(),
-                            DateUpdated = row[4].ToString(),
-                            Claimer = row[5].ToString(),
-                            DateClaimed = row[6].ToString(),
-                            Active = Int32.Parse(row[7].ToString()),
+                            Notes = row[3].ToString(),
+                            Link = row[4].ToString(),
+                            DateUpdated = row[5].ToString(),
+                            Claimer = row[6].ToString(),
+                            DateClaimed = row[7].ToString(),
+                            Active = Int32.Parse(row[8].ToString()),
                         };
 
                         if (myItem.Active == 1)
@@ -185,10 +187,10 @@ namespace WebApplication1.Services
             return MyList;
         }
 
-        public void AddItem(string userId, string newItemItem, string newItemLink)
+        public void AddItem(string userId, string newItemItem, string newItemNotes, string newItemLink)
         {
             // Specifying Column Range for reading...
-            var range = $"{itemSheet}!A:H";
+            var range = $"{itemSheet}!A:I";
             var valueRange = new ValueRange();
             int mynewID = 1;
 
@@ -196,7 +198,7 @@ namespace WebApplication1.Services
             List<ItemModel> AllLists = GetAllLists();
             int maxId = AllLists.Max(i => i.ItemId);
 
-            var newItem = new List<object>() { maxId+1, userId, newItemItem, newItemLink, DateTime.Now, "", "", 1 };
+            var newItem = new List<object>() { maxId+1, userId, newItemItem, newItemNotes, newItemLink, DateTime.Now, "", "", 1 };
             valueRange.Values = new List<IList<object>> { newItem };
             // Append the above record...
             var appendRequest = service.Spreadsheets.Values.Append(valueRange, SpreadsheetId, range);
@@ -204,11 +206,11 @@ namespace WebApplication1.Services
             var appendReponse = appendRequest.Execute();
         }
 
-        public void UpdateItem(int itemId, string itemItem, string itemLink)
+        public void UpdateItem(int itemId, string itemItem, string itemNotes, string itemLink)
         {
-            var range = $"{itemSheet}!C{itemId + 1}:E{itemId + 1}";
+            var range = $"{itemSheet}!C{itemId + 1}:F{itemId + 1}";
             var valueRange = new ValueRange();
-            var oblist = new List<object>() { itemItem, itemLink, DateTime.Now };
+            var oblist = new List<object>() { itemItem, itemNotes, itemLink, DateTime.Now };
             valueRange.Values = new List<IList<object>> { oblist };
             // Performing Update Operation...
             var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
@@ -218,7 +220,7 @@ namespace WebApplication1.Services
 
         public void DeleteItem(int itemId)
         {
-            var range = $"{itemSheet}!H{itemId+1}:H{itemId+1}";
+            var range = $"{itemSheet}!I{itemId+1}:I{itemId+1}";
             var valueRange = new ValueRange();
             var oblist = new List<object>() { 0 };
             valueRange.Values = new List<IList<object>> { oblist };
@@ -230,7 +232,7 @@ namespace WebApplication1.Services
 
         public void ClaimItem(int itemId, string claimerId)
         {
-            var range = $"{itemSheet}!F{itemId + 1}:G{itemId + 1}";
+            var range = $"{itemSheet}!G{itemId + 1}:H{itemId + 1}";
             var valueRange = new ValueRange();
             var oblist = new List<object>() { claimerId, DateTime.Now };
             valueRange.Values = new List<IList<object>> { oblist };
@@ -241,7 +243,7 @@ namespace WebApplication1.Services
         }
         public void UnclaimItem(int itemId)
         {
-            var range = $"{itemSheet}!F{itemId + 1}:G{itemId + 1}";
+            var range = $"{itemSheet}!G{itemId + 1}:H{itemId + 1}";
             var valueRange = new ValueRange();
             var oblist = new List<object>() { "", "" };
             valueRange.Values = new List<IList<object>> { oblist };

@@ -27,6 +27,7 @@ namespace WebApplication1.Models
         public string Name { get; set; }
         public string Item { get; set; }
         public string Link { get; set; }
+        public string Notes { get; set; }
         public string DateUpdated { get; set; }
         public string Claimer { get; set; }
         public string DateClaimed { get; set; }

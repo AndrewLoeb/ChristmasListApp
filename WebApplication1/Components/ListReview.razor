@@ -42,14 +42,18 @@
         {
             <div class="card">
                 <div class="card-body" style="position:relative">
-                    <h5 class="card-title">
-                        @item.Item
-                        <br />
+                    <h6>
                         @if (item.Link != "")
                         {<span class="badge badge-info"> Link </span>}
+                        @if (item.Link != "")
+                        {<a href="@item.Link" target="_blank" class="stretched-link"></a>}
+                    </h6>
+                    <h5 class="card-title">
+                        @item.Item
                     </h5>
-                    @if (item.Link != "")
-                    {<a href="@item.Link" target="_blank" class="stretched-link"></a>}
+                    <p class="card-text">
+                        @item.Notes
+                    </p>
 
                 </div>
                 <div class="card-footer">

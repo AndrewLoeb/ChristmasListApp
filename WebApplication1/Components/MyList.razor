@@ -25,6 +25,7 @@
             <tr>
                 <th width="150px"></th>
                 <th width="400px">Item</th>
+                <th width="400px">Notes</th>
                 <th width="200px">Link</th>
                 <th width="200px">Date Added</th>
             </tr>
@@ -37,6 +38,7 @@
             <tr>
                 <td>    <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)">Save</button> </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" /> </form> </td>
+                <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" /> </form> </td>
                 <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" /> </form></td>
                 <td></td>
             </tr>
@@ -51,6 +53,7 @@
                 </div>
             </td>
             <td>@item.Item</td>
+            <td style="word-wrap:break-word; max-width:400px"> @item.Notes </td>
             <td style="word-wrap:break-word; max-width:400px"><a href="@item.Link" target="_blank"> @item.Link</a></td>
             <td>@item.DateUpdated</td>
         </tr>
@@ -66,6 +69,9 @@
             <div class="form-row">
                 <div class="col">
                     <input type="text" class="form-control" @bind="newItemItem" onclick="this.select();" />
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" @bind="newItemNotes" onclick="this.select();" />
                 </div>
                 <div class="col">
                     <input type="text" class="form-control" @bind="newItemLink" onclick="this.select();" size="15" />
@@ -94,55 +100,57 @@ else
     @code
 {
 
-    public dynamic myList => ListService.GetMyList(UserIdService.userId);
+        public dynamic myList => ListService.GetMyList(UserIdService.userId);
 
-    public dynamic myNotes => ListService.Users_GetList().FirstOrDefault(u => u.Name == UserIdService.userId).Notes;
+        public dynamic myNotes => ListService.Users_GetList().FirstOrDefault(u => u.Name == UserIdService.userId).Notes;
 
-    public string newItemItem = "New Item";
-    public string newItemLink = "Link (Optional)";
+        public string newItemItem = "New Item";
+        public string newItemNotes = "Notes (Optional)";
+        public string newItemLink = "Link (Optional)";
 
-    public int editItemId = 0;
-    public int editNotesFlag = 0;
-    public string newNotes = "";
+        public int editItemId = 0;
+        public int editNotesFlag = 0;
+        public string newNotes = "";
 
-    public void editNotes()
-    {
-        newNotes = myNotes;
-        editNotesFlag = 1;
-    }
-    public void submitEditNotes()
-    {
-        ListService.UpdateNotes(UserIdService.userId, newNotes);
-        editNotesFlag = 0;
-        toastService.ShowSuccess("Saved Notes");
-    }
-    public void addItem()
-    {
-        System.Console.WriteLine($"Added: {newItemItem}");
+        public void editNotes()
+        {
+            newNotes = myNotes;
+            editNotesFlag = 1;
+        }
+        public void submitEditNotes()
+        {
+            ListService.UpdateNotes(UserIdService.userId, newNotes);
+            editNotesFlag = 0;
+            toastService.ShowSuccess("Saved Notes");
+        }
+        public void addItem()
+        {
+            System.Console.WriteLine($"Added: {newItemItem}");
 
-        if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
+            if (newItemNotes.Equals("Notes (Optional)")) { newItemNotes = ""; }
+            if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
 
-        ListService.AddItem(UserIdService.userId, newItemItem, newItemLink);
-        toastService.ShowSuccess("Added " + newItemItem + "!");
+            ListService.AddItem(UserIdService.userId, newItemItem, newItemNotes, newItemLink);
+            toastService.ShowSuccess("Added " + newItemItem + "!");
 
-        newItemItem = "New Item";
-        newItemLink = "Link (Optional)";
+            newItemItem = "New Item";
+            newItemLink = "Link (Optional)";
 
-    }
-    public void editItem(ItemModel item)
-    {
-        editItemId = item.ItemId;
-    }
-    public void submitEditItem(ItemModel item)
-    {
-        ListService.UpdateItem(item.ItemId, item.Item, item.Link);
-        editItemId = 0;
-        toastService.ShowSuccess("Saved " + item.Item + "!");
-    }
-    public void deleteItem(ItemModel item)
-    {
-        ListService.DeleteItem(item.ItemId);
-        toastService.ShowSuccess("Deleted " + item.Item + "!");
-    }
+        }
+        public void editItem(ItemModel item)
+        {
+            editItemId = item.ItemId;
+        }
+        public void submitEditItem(ItemModel item)
+        {
+            ListService.UpdateItem(item.ItemId, item.Item, item.Notes, item.Link);
+            editItemId = 0;
+            toastService.ShowSuccess("Saved " + item.Item + "!");
+        }
+        public void deleteItem(ItemModel item)
+        {
+            ListService.DeleteItem(item.ItemId);
+            toastService.ShowSuccess("Deleted " + item.Item + "!");
+        }
 
     }
