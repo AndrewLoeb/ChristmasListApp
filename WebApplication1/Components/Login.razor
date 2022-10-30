@@ -11,7 +11,7 @@
 <h3>Login</h3>
 <div>
 
-    <form>
+    <form @onsubmit="Set_ShowLists">
         <div class="form-row">
             <div class="col">
 
@@ -27,7 +27,7 @@
                 <input type="password" placeholder="Enter Password" class="form-control" @bind="password" size="20"/>
             </div>
             <div class="col">
-                <button type="button" class="btn btn-success" @onclick="Set_ShowLists">Activate!</button>
+                <button type="button" class="btn btn-success" @onclick="Set_ShowLists" >Activate!</button>
             </div>
         </div>
     </form>
@@ -74,6 +74,8 @@
     public async Task Set_ShowLists()
     {
         await UserIdService.SetUser(userId);
+
+        if (password == null) { return;  }
 
         if (password.Equals(userList.Where(u => u.Name.Equals( userId)).Select(u => u.Password).FirstOrDefault()))
         {
