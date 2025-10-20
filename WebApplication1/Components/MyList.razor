@@ -68,13 +68,13 @@
         <form>
             <div class="form-row">
                 <div class="col">
-                    <input type="text" class="form-control" @bind="newItemItem" onclick="this.select();" />
+                    <input type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" />
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" @bind="newItemNotes" onclick="this.select();" />
+                    <input type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" />
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" @bind="newItemLink" onclick="this.select();" size="15" />
+                    <input type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" size="15" />
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-success" @onclick="addItem">Add</button>
@@ -104,9 +104,12 @@ else
 
         public dynamic myNotes => ListService.Users_GetList().FirstOrDefault(u => u.Name == UserIdService.userId).Notes;
 
-        public string newItemItem = "New Item";
-        public string newItemNotes = "Notes (Optional)";
-        public string newItemLink = "Link (Optional)";
+        public string newItemItem = "";
+        public string newItemNotes = "";
+        public string newItemLink = "";
+        //public string newItemItem = "New Item";
+        //public string newItemNotes = "Notes (Optional)";
+        //public string newItemLink = "Link (Optional)";
 
         public int editItemId = 0;
         public int editNotesFlag = 0;
@@ -133,8 +136,12 @@ else
             ListService.AddItem(UserIdService.userId, newItemItem, newItemNotes, newItemLink);
             toastService.ShowSuccess("Added " + newItemItem + "!");
 
-            newItemItem = "New Item";
-            newItemLink = "Link (Optional)";
+            //newItemItem = "New Item";
+            //newItemNotes = "Notes (Optional)";
+            //newItemLink = "Link (Optional)";
+            newItemItem = "";
+            newItemNotes = "";
+            newItemLink = "";
 
         }
         public void editItem(ItemModel item)

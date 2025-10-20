@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
+@inject allListsService allListsService
 
 @using Blazored.Toast
 @using Blazored.Toast.Services
@@ -22,11 +23,11 @@
 <div>
     <select class="form-control" @bind="listUserId">
         <option value="">Select Elf... </option>
-        @foreach (UserModel user in userList)
+        @foreach (ListModel List in allListsService.AllLists)
         {
-            @if (user.Name != UserIdService.userId)
+            @if (List.Name != UserIdService.userId)
             {
-                <option value="@user.Name">  @user.Name </option>
+                <option value="@List.Name"> @List.dropDownStr  </option>
             }
         }
     </select>
@@ -38,7 +39,7 @@
         <h3> @listUserId's List: </h3>
     </div>
     <div class="card-columns">
-        @foreach (ItemModel item in ListService.GetMyList(listUserId))
+        @foreach (ItemModel item in listUserItems.List)
         {
             <div class="card">
                 <div class="card-body" style="position:relative">
@@ -61,14 +62,14 @@
                     {<div> <button @onclick="() => unclaimItem(item)">Unclaim</button> </div>}
                     else if (item.Claimer == "")
                     {<div>    <button @onclick="() => claimItem(item)">Claim!</button> </div>}
-    else
-    {
-    {<span class="badge badge-primary"> Claimed </span>}
-    }
-    <small class="text-muted">
-        Updated at @item.DateUpdated
-    </small>
-</div>
+                    else
+                    {
+                        {<span class="badge badge-primary"> Claimed </span>}
+                    }
+                    <small class="text-muted">
+                        Updated at @item.DateUpdated
+                    </small>
+                </div>
             </div>
         }
     </div>
@@ -81,18 +82,20 @@
 
 @code {
     public string listUserId = "";
-    public List<UserModel> userList => ListService.Users_GetList();
 
-    public dynamic listUserNotes => ListService.Users_GetList().FirstOrDefault(u => u.Name == listUserId).Notes;
+    public dynamic listUserNotes => allListsService.userList.FirstOrDefault(u => u.Name == listUserId).Notes;
+    public dynamic listUserItems => allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId);
 
     public void claimItem(ItemModel item)
     {
         ListService.ClaimItem(item.ItemId, UserIdService.userId);
+        allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = UserIdService.userId;
         toastService.ShowSuccess("You claimed " + item.Item + " for " + listUserId + "!");
     }
     public void unclaimItem(ItemModel item)
     {
         ListService.UnclaimItem(item.ItemId);
+        allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = "";
         toastService.ShowInfo("Unclaimed " + item.Item);
     }
 }

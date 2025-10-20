@@ -28,6 +28,7 @@ namespace WebApplication1
             services.AddTransient<googleSheetsSpiceService>();
             services.AddTransient<googleSheetsListService>();
             services.AddScoped<userIdService>();
+            services.AddScoped<allListsService>();
             services.AddBlazoredToast();
         }
 

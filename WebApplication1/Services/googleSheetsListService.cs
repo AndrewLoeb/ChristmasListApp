@@ -61,6 +61,7 @@ namespace WebApplication1.Services
             {
                 foreach (var row in values)
                 {
+                    Console.WriteLine(row);
                     j++;
                     if (j > 1)
                     {
@@ -99,9 +100,9 @@ namespace WebApplication1.Services
             updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
             var appendReponse = updateRequest.Execute();
         }
-        public List<ItemModel> GetAllLists()
+        public List<ItemModel> GetAllItmes()
         {
-            var AllLists = new List<ItemModel>();
+            var AllItems = new List<ItemModel>();
             var range = $"{itemSheet}!A:I";
             int j = 0;
             SpreadsheetsResource.ValuesResource.GetRequest request =
@@ -130,7 +131,7 @@ namespace WebApplication1.Services
                             Active = Int32.Parse(row[8].ToString()),
                         };
 
-                        AllLists.Add(myItem);
+                        AllItems.Add(myItem);
                     }
                 }
             }
@@ -139,10 +140,11 @@ namespace WebApplication1.Services
                 Console.WriteLine("Error reading data.");
             }
 
-            return AllLists;
+            return AllItems;
         }
         public List<ItemModel> GetMyList(string userId)
         {
+            System.Diagnostics.Debug.WriteLine($"List request for: {userId}");
             var MyList = new List<ItemModel>();
             var range = $"{itemSheet}!A:I";
             int j = 0;
@@ -186,6 +188,36 @@ namespace WebApplication1.Services
 
             return MyList;
         }
+        //WIP
+        public List<ListModel> GetAllLists(List<UserModel> userList)
+        {
+            var AllLists = new List<ListModel>();
+            foreach(UserModel user in userList)
+            {
+                int itemsListed = 0;
+                int itemsClaimed = 0;
+                var lastUpdated = DateTime.Parse("2022-12-26T00:00:00.000+00:00");
+                List<ItemModel> MyList = GetMyList(user.Name);
+                foreach (ItemModel item in MyList)
+                {
+                    itemsListed++;
+                    if (item.Claimer != "") { itemsClaimed++; }
+                    if (DateTime.Parse(item.DateUpdated) > lastUpdated) { lastUpdated = DateTime.Parse(item.DateUpdated); }
+                }
+                string dropDownStr = String.Format("{0}-Items: {1,-2}; Unclaimed Items: {2,-2}; Last Updated: {3}", user.Name.PadRight(15, '-'), itemsListed, itemsListed - itemsClaimed, lastUpdated.ToString("d"));
+                ListModel myList = new ListModel()
+                {
+                    List = MyList,
+                    Name = user.Name,
+                    itemsListed = itemsListed,
+                    itemsClaimed = itemsClaimed,
+                    lastUpdated = lastUpdated,
+                    dropDownStr = dropDownStr
+                };
+                AllLists.Add(myList);
+            }
+            return AllLists;
+        }
 
         public void AddItem(string userId, string newItemItem, string newItemNotes, string newItemLink)
         {
@@ -195,7 +227,7 @@ namespace WebApplication1.Services
             int mynewID = 1;
 
             //var myInvList = Spices_GetList();
-            List<ItemModel> AllLists = GetAllLists();
+            List<ItemModel> AllLists = GetAllItmes();
             int maxId = AllLists.Max(i => i.ItemId);
 
             var newItem = new List<object>() { maxId+1, userId, newItemItem, newItemNotes, newItemLink, DateTime.Now, "", "", 1 };

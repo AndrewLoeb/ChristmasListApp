@@ -33,4 +33,13 @@ namespace WebApplication1.Models
         public string DateClaimed { get; set; }
         public int Active { get; set; }
     }
+    public class ListModel
+    {
+        public List<ItemModel> List { get; set; }
+        public string Name { get; set; }
+        public int itemsListed { get; set; }
+        public int itemsClaimed { get; set; }
+        public System.DateTime lastUpdated { get; set; }
+        public string dropDownStr { get; set; }
+    }
 }
