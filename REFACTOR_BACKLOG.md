@@ -21,14 +21,14 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [x] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns
 
 ## 🔧 Low Priority / Nice to Have
-- [ ] **Manual refresh button for product metadata** - Add icon/button to re-fetch images for individual items
-- [ ] **Admin page for batch product info refresh** - Update all legacy items with missing metadata
-- [ ] **Manual price field** - Let users enter product prices for budget tracking
-- [ ] **Upgrade Bootstrap 4 → 5** - Remove jQuery dependency, modernize UI
+- [x] **Upgrade Bootstrap 4 → 5** - Remove jQuery dependency, modernize UI
 - [ ] **Add loading spinners** - Visual feedback during async operations
 - [ ] **Fix date types** - Change DateUpdated/DateClaimed from string to DateTime
 - [ ] **Improve accessibility** - Add ARIA labels, keyboard navigation
-- [ ] **UI theme and color enhancement** - Update theme to a modern professional feel
+- [ ] **UI theme and color enhancement** - Update theme to a modern professional feel (including login screen spacing)
+- [ ] **Manual refresh button for product metadata** - Add icon/button to re-fetch images for individual items
+- [ ] **Admin page for batch product info refresh** - Update all legacy items with missing metadata
+- [ ] **Manual price field** - Let users enter product prices for budget tracking
 
 ## 💡 Feature Enhancements
 
