@@ -123,10 +123,48 @@ else
 
     @code
 {
+        private List<ItemModel> _myList;
+        private string _myNotes;
 
-        public dynamic myList => ListService.GetMyList(UserIdService.userId);
+        public List<ItemModel> myList
+        {
+            get
+            {
+                if (_myList == null)
+                {
+                    try
+                    {
+                        _myList = ListService.GetMyList(UserIdService.userId);
+                    }
+                    catch (Exception ex)
+                    {
+                        toastService.ShowError($"Error loading your list: {ex.Message}");
+                        _myList = new List<ItemModel>();
+                    }
+                }
+                return _myList;
+            }
+        }
 
-        public dynamic myNotes => ListService.Users_GetList().FirstOrDefault(u => u.Name == UserIdService.userId).Notes;
+        public string myNotes
+        {
+            get
+            {
+                if (_myNotes == null)
+                {
+                    try
+                    {
+                        _myNotes = ListService.Users_GetList().FirstOrDefault(u => u.Name == UserIdService.userId)?.Notes ?? "";
+                    }
+                    catch (Exception ex)
+                    {
+                        toastService.ShowError($"Error loading notes: {ex.Message}");
+                        _myNotes = "";
+                    }
+                }
+                return _myNotes;
+            }
+        }
 
         public string newItemItem = "";
         public string newItemNotes = "";
@@ -149,6 +187,7 @@ else
         public void submitEditNotes()
         {
             ListService.UpdateNotes(UserIdService.userId, newNotes);
+            _myNotes = newNotes;
             editNotesFlag = 0;
             toastService.ShowSuccess("Saved Notes");
         }
@@ -169,6 +208,8 @@ else
             newItemNotes = "";
             newItemLink = "";
 
+            // Refresh the list
+            _myList = null;
         }
         public void editItem(ItemModel item)
         {
@@ -179,6 +220,8 @@ else
             ListService.UpdateItem(item.ItemId, item.Item, item.Notes, item.Link);
             editItemId = 0;
             toastService.ShowSuccess("Saved " + item.Item + "!");
+            // Refresh the list
+            _myList = null;
         }
         public void showDeleteConfirmation(ItemModel item)
         {
@@ -200,6 +243,8 @@ else
                 toastService.ShowSuccess("Deleted " + itemToDelete.Item + "!");
                 showDeleteModal = false;
                 itemToDelete = null;
+                // Refresh the list
+                _myList = null;
             }
         }
 

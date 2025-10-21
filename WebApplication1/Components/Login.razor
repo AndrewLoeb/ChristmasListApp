@@ -6,6 +6,15 @@
 @inject userIdService UserIdService
 @inject allListsService allListsService
 
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@inject IToastService toastService
+
+<BlazoredToasts Timeout="10"
+                ShowProgressBar="true"
+                IconType="IconType.FontAwesome"
+                ErrorClass="error-toast-override"
+                ErrorIcon="fa fa-exclamation-triangle" />
 
 @if (!showLists)
 {
@@ -81,7 +90,16 @@
         {
             if (_userList == null)
             {
-                _userList = ListService.Users_GetList();
+                try
+                {
+                    _userList = ListService.Users_GetList();
+                }
+                catch (Exception ex)
+                {
+                    toastService.ShowError($"Error loading users: {ex.Message}");
+                    LoadingMessage = "Error loading data. Please try again.";
+                    _userList = new List<UserModel>(); // Return empty list to prevent further errors
+                }
             }
             return _userList;
         }
@@ -93,7 +111,16 @@
         {
             if (_allLists == null)
             {
-                _allLists = ListService.GetAllLists(userList);
+                try
+                {
+                    _allLists = ListService.GetAllLists(userList);
+                }
+                catch (Exception ex)
+                {
+                    toastService.ShowError($"Error loading lists: {ex.Message}");
+                    LoadingMessage = "Error loading data. Please try again.";
+                    _allLists = new List<ListModel>(); // Return empty list to prevent further errors
+                }
             }
             return _allLists;
         }

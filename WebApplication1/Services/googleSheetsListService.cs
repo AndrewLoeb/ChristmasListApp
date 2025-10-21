@@ -46,17 +46,53 @@ namespace WebApplication1.Services
             });
         }
 
+        private T ExecuteWithRetry<T>(Func<T> operation, string operationName)
+        {
+            int maxRetries = 3;
+            int retryCount = 0;
+            Exception lastException = null;
+
+            while (retryCount < maxRetries)
+            {
+                try
+                {
+                    Console.WriteLine($"Attempting {operationName} (attempt {retryCount + 1}/{maxRetries})");
+                    return operation();
+                }
+                catch (Exception ex)
+                {
+                    retryCount++;
+                    lastException = ex;
+                    Console.WriteLine($"Error on attempt {retryCount}/{maxRetries} for {operationName}: {ex.Message}");
+
+                    if (retryCount < maxRetries)
+                    {
+                        // Wait before retrying (exponential backoff: 1s, 2s, 4s)
+                        int delayMs = (int)Math.Pow(2, retryCount - 1) * 1000;
+                        Console.WriteLine($"Waiting {delayMs}ms before retry...");
+                        System.Threading.Thread.Sleep(delayMs);
+                    }
+                }
+            }
+
+            // All retries failed
+            Console.WriteLine($"All {maxRetries} attempts failed for {operationName}");
+            throw new Exception($"Failed to {operationName} after {maxRetries} attempts. Please contact Andrew for assistance.", lastException);
+        }
+
         public List<UserModel> Users_GetList()
         {
-            var myUserList = new List<UserModel>();
-            var range = $"{usersSheet}!A:E";
-            int j = 0;
-            SpreadsheetsResource.ValuesResource.GetRequest request =
-                    service.Spreadsheets.Values.Get(SpreadsheetId, range);
-            // Ecexuting Read Operation...
-            var response = request.Execute();
-            // Getting all records from Column A to E...
-            IList<IList<object>> values = response.Values;
+            return ExecuteWithRetry(() =>
+            {
+                var myUserList = new List<UserModel>();
+                var range = $"{usersSheet}!A:E";
+                int j = 0;
+                SpreadsheetsResource.ValuesResource.GetRequest request =
+                        service.Spreadsheets.Values.Get(SpreadsheetId, range);
+                // Ecexuting Read Operation...
+                var response = request.Execute();
+                // Getting all records from Column A to E...
+                IList<IList<object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
                 foreach (var row in values)
@@ -77,12 +113,13 @@ namespace WebApplication1.Services
                     }
                 }
             }
-            else
-            {
-                Console.WriteLine("Error reading data.");
-            }
+                else
+                {
+                    Console.WriteLine("Error reading data.");
+                }
 
-            return myUserList;
+                return myUserList;
+            }, "load users");
         }
         public void UpdateNotes(string userId, string newNotes)
         {
@@ -101,58 +138,63 @@ namespace WebApplication1.Services
         }
         public List<ItemModel> GetAllItems()
         {
-            var AllItems = new List<ItemModel>();
-            var range = $"{itemSheet}!A:I";
-            int j = 0;
-            SpreadsheetsResource.ValuesResource.GetRequest request =
-                    service.Spreadsheets.Values.Get(SpreadsheetId, range);
-            // Ecexuting Read Operation...
-            var response = request.Execute();
-            // Getting all records from Column A to E...
-            IList<IList<object>> values = response.Values;
-            if (values != null && values.Count > 0)
+            return ExecuteWithRetry(() =>
             {
-                foreach (var row in values)
+                var AllItems = new List<ItemModel>();
+                var range = $"{itemSheet}!A:I";
+                int j = 0;
+                SpreadsheetsResource.ValuesResource.GetRequest request =
+                        service.Spreadsheets.Values.Get(SpreadsheetId, range);
+                // Ecexuting Read Operation...
+                var response = request.Execute();
+                // Getting all records from Column A to E...
+                IList<IList<object>> values = response.Values;
+                if (values != null && values.Count > 0)
                 {
-                    j++;
-                    if (j > 1)
+                    foreach (var row in values)
                     {
-                        var myItem = new ItemModel()
+                        j++;
+                        if (j > 1)
                         {
-                            ItemId = Int32.Parse(row[0].ToString()),
-                            Name = row[1].ToString(),
-                            Item = row[2].ToString(),
-                            Notes = row[3].ToString(),
-                            Link = row[4].ToString(),
-                            DateUpdated = row[5].ToString(),
-                            Claimer = row[6].ToString(),
-                            DateClaimed = row[7].ToString(),
-                            Active = Int32.Parse(row[8].ToString()),
-                        };
+                            var myItem = new ItemModel()
+                            {
+                                ItemId = Int32.Parse(row[0].ToString()),
+                                Name = row[1].ToString(),
+                                Item = row[2].ToString(),
+                                Notes = row[3].ToString(),
+                                Link = row[4].ToString(),
+                                DateUpdated = row[5].ToString(),
+                                Claimer = row[6].ToString(),
+                                DateClaimed = row[7].ToString(),
+                                Active = Int32.Parse(row[8].ToString()),
+                            };
 
-                        AllItems.Add(myItem);
+                            AllItems.Add(myItem);
+                        }
                     }
                 }
-            }
-            else
-            {
-                Console.WriteLine("Error reading data.");
-            }
+                else
+                {
+                    Console.WriteLine("Error reading data.");
+                }
 
-            return AllItems;
+                return AllItems;
+            }, "load all items");
         }
         public List<ItemModel> GetMyList(string userId)
         {
-            System.Diagnostics.Debug.WriteLine($"List request for: {userId}");
-            var MyList = new List<ItemModel>();
-            var range = $"{itemSheet}!A:I";
-            int j = 0;
-            SpreadsheetsResource.ValuesResource.GetRequest request =
-                    service.Spreadsheets.Values.Get(SpreadsheetId, range);
-            // Ecexuting Read Operation...
-            var response = request.Execute();
-            // Getting all records from Column A to E...
-            IList<IList<object>> values = response.Values;
+            return ExecuteWithRetry(() =>
+            {
+                System.Diagnostics.Debug.WriteLine($"List request for: {userId}");
+                var MyList = new List<ItemModel>();
+                var range = $"{itemSheet}!A:I";
+                int j = 0;
+                SpreadsheetsResource.ValuesResource.GetRequest request =
+                        service.Spreadsheets.Values.Get(SpreadsheetId, range);
+                // Ecexuting Read Operation...
+                var response = request.Execute();
+                // Getting all records from Column A to E...
+                IList<IList<object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
                 foreach (var row in values)
@@ -180,12 +222,13 @@ namespace WebApplication1.Services
                     }
                 }
             }
-            else
-            {
-                Console.WriteLine("Error reading data.");
-            }
+                else
+                {
+                    Console.WriteLine("Error reading data.");
+                }
 
-            return MyList;
+                return MyList;
+            }, $"load items for {userId}");
         }
         //WIP
         public List<ListModel> GetAllLists(List<UserModel> userList)
