@@ -32,6 +32,11 @@ namespace WebApplication1.Models
         public string Claimer { get; set; }
         public string DateClaimed { get; set; }
         public int Active { get; set; }
+
+        // Product metadata fields
+        public string ImageUrl { get; set; }
+        public decimal? Price { get; set; }  // Nullable - may not always have price
+        public string MetadataFetchedDate { get; set; }  // When we last scraped this link
     }
     public class ListModel
     {

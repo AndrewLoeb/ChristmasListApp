@@ -141,13 +141,13 @@ namespace WebApplication1.Services
             return ExecuteWithRetry(() =>
             {
                 var AllItems = new List<ItemModel>();
-                var range = $"{itemSheet}!A:I";
+                var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 // Ecexuting Read Operation...
                 var response = request.Execute();
-                // Getting all records from Column A to E...
+                // Getting all records from Column A to L...
                 IList<IList<object>> values = response.Values;
                 if (values != null && values.Count > 0)
                 {
@@ -167,6 +167,12 @@ namespace WebApplication1.Services
                                 Claimer = row[6].ToString(),
                                 DateClaimed = row[7].ToString(),
                                 Active = Int32.Parse(row[8].ToString()),
+                                // Read new metadata fields (columns J, K, L) - handle missing data gracefully
+                                ImageUrl = row.Count > 9 && row[9] != null ? row[9].ToString() : "",
+                                Price = row.Count > 10 && row[10] != null && !string.IsNullOrWhiteSpace(row[10].ToString())
+                                    ? decimal.Parse(row[10].ToString())
+                                    : (decimal?)null,
+                                MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
                             };
 
                             AllItems.Add(myItem);
@@ -187,13 +193,13 @@ namespace WebApplication1.Services
             {
                 System.Diagnostics.Debug.WriteLine($"List request for: {userId}");
                 var MyList = new List<ItemModel>();
-                var range = $"{itemSheet}!A:I";
+                var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 // Ecexuting Read Operation...
                 var response = request.Execute();
-                // Getting all records from Column A to E...
+                // Getting all records from Column A to L...
                 IList<IList<object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
@@ -213,6 +219,12 @@ namespace WebApplication1.Services
                             Claimer = row[6].ToString(),
                             DateClaimed = row[7].ToString(),
                             Active = Int32.Parse(row[8].ToString()),
+                            // Read new metadata fields (columns J, K, L) - handle missing data gracefully
+                            ImageUrl = row.Count > 9 && row[9] != null ? row[9].ToString() : "",
+                            Price = row.Count > 10 && row[10] != null && !string.IsNullOrWhiteSpace(row[10].ToString())
+                                ? decimal.Parse(row[10].ToString())
+                                : (decimal?)null,
+                            MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
                         };
 
                         if (myItem.Active == 1)
@@ -270,10 +282,10 @@ namespace WebApplication1.Services
             return AllLists;
         }
 
-        public void AddItem(string userId, string newItemItem, string newItemNotes, string newItemLink)
+        public void AddItem(string userId, string newItemItem, string newItemNotes, string newItemLink, string imageUrl = "", decimal? price = null, string metadataFetchedDate = "")
         {
             // Specifying Column Range for reading...
-            var range = $"{itemSheet}!A:I";
+            var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
             var valueRange = new ValueRange();
             int mynewID = 1;
 
@@ -281,7 +293,21 @@ namespace WebApplication1.Services
             List<ItemModel> AllLists = GetAllItems();
             int maxId = AllLists.Max(i => i.ItemId);
 
-            var newItem = new List<object>() { maxId+1, userId, newItemItem, newItemNotes, newItemLink, DateTime.Now, "", "", 1 };
+            // Columns: A-I (existing) + J-L (new metadata fields)
+            var newItem = new List<object>() {
+                maxId+1,              // A: ItemId
+                userId,               // B: Name
+                newItemItem,          // C: Item
+                newItemNotes,         // D: Notes
+                newItemLink,          // E: Link
+                DateTime.Now,         // F: DateUpdated
+                "",                   // G: Claimer
+                "",                   // H: DateClaimed
+                1,                    // I: Active
+                imageUrl,             // J: ImageUrl
+                price?.ToString() ?? "", // K: Price (convert to string for Google Sheets)
+                metadataFetchedDate   // L: MetadataFetchedDate
+            };
             valueRange.Values = new List<IList<object>> { newItem };
             // Append the above record...
             var appendRequest = service.Spreadsheets.Values.Append(valueRange, SpreadsheetId, range);
@@ -289,16 +315,34 @@ namespace WebApplication1.Services
             var appendReponse = appendRequest.Execute();
         }
 
-        public void UpdateItem(int itemId, string itemItem, string itemNotes, string itemLink)
+        public void UpdateItem(int itemId, string itemItem, string itemNotes, string itemLink, string imageUrl = null, decimal? price = null, string metadataFetchedDate = null)
         {
-            var range = $"{itemSheet}!C{itemId + 1}:F{itemId + 1}";
-            var valueRange = new ValueRange();
-            var oblist = new List<object>() { itemItem, itemNotes, itemLink, DateTime.Now };
-            valueRange.Values = new List<IList<object>> { oblist };
-            // Performing Update Operation...
-            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
-            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
-            var appendReponse = updateRequest.Execute();
+            // Update columns C-F (Item, Notes, Link, DateUpdated)
+            var range1 = $"{itemSheet}!C{itemId + 1}:F{itemId + 1}";
+            var valueRange1 = new ValueRange();
+            var oblist1 = new List<object>() { itemItem, itemNotes, itemLink, DateTime.Now };
+            valueRange1.Values = new List<IList<object>> { oblist1 };
+
+            var updateRequest1 = service.Spreadsheets.Values.Update(valueRange1, SpreadsheetId, range1);
+            updateRequest1.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            updateRequest1.Execute();
+
+            // Update columns J-L (ImageUrl, Price, MetadataFetchedDate) if provided
+            if (imageUrl != null || price != null || metadataFetchedDate != null)
+            {
+                var range2 = $"{itemSheet}!J{itemId + 1}:L{itemId + 1}";
+                var valueRange2 = new ValueRange();
+                var oblist2 = new List<object>() {
+                    imageUrl ?? "",              // J: ImageUrl
+                    price?.ToString() ?? "",     // K: Price
+                    metadataFetchedDate ?? ""    // L: MetadataFetchedDate
+                };
+                valueRange2.Values = new List<IList<object>> { oblist2 };
+
+                var updateRequest2 = service.Spreadsheets.Values.Update(valueRange2, SpreadsheetId, range2);
+                updateRequest2.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+                updateRequest2.Execute();
+            }
         }
 
         public void DeleteItem(int itemId)
