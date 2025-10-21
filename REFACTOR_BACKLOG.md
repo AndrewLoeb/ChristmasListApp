@@ -17,7 +17,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [x] **Add Cancel buttons** - Allow users to exit edit mode without saving (My List items & notes). Only edit one item at a time
 - [x] **Add input validation** - Validate URLs, check for empty item names, character limits
 - [x] **Improve mobile responsiveness** - Fix card-columns layout issues in ListReview
-- [ ] **Move Google Sheets credentials** - Extract hardcoded SpreadsheetId to configuration
+- [x] **Move Google Sheets credentials** - Extract hardcoded SpreadsheetId to configuration
 - [ ] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns
 
 ## 🔧 Low Priority / Nice to Have

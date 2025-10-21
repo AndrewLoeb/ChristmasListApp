@@ -10,6 +10,7 @@ using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
 // Added for me
 using WebApplication1.Models;
 
@@ -22,10 +23,12 @@ namespace WebApplication1.Services
         private readonly string ApplicationName = "Spices and Herbs";
         private readonly string dataSheet = "Sheet2";
         private readonly string logSheet = "Log";
-        private readonly string SpreadsheetId = "1D4BDJRtUyU1rvgenlYp3gpxgrRS3wclt15CSAbHy7Eo";
+        private readonly string SpreadsheetId;
         private SheetsService service;
-        public googleSheetsSpiceService()
+
+        public googleSheetsSpiceService(IConfiguration configuration)
         {
+            SpreadsheetId = configuration["GoogleSheets:SpiceSpreadsheetId"];
             Init();
         }
 

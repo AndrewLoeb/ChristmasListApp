@@ -10,6 +10,7 @@ using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
 // Added for me
 using WebApplication1.Models;
 
@@ -22,10 +23,12 @@ namespace WebApplication1.Services
         private readonly string ApplicationName = "Christmas List Data";
         private readonly string usersSheet = "Users";
         private readonly string itemSheet = "Items";
-        private readonly string SpreadsheetId = "1vlS_UM0fCKAWPNxix8C2POwrcH3YTTdSpYQZWeDeG0k";
+        private readonly string SpreadsheetId;
         private SheetsService service;
-        public googleSheetsListService()
+
+        public googleSheetsListService(IConfiguration configuration)
         {
+            SpreadsheetId = configuration["GoogleSheets:ListSpreadsheetId"];
             Init();
         }
 
