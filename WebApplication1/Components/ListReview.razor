@@ -38,41 +38,43 @@
     <div>
         <h3> @listUserId's List: </h3>
     </div>
-    <div class="card-columns">
+    <div class="row">
         @foreach (ItemModel item in listUserItems.List)
         {
-            <div class="card">
-                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                {
-                    <img src="@item.ImageUrl" class="card-img-top" alt="@item.Item" style="max-height: 200px; object-fit: contain; padding: 10px;" />
-                }
-                <div class="card-body" style="position:relative">
-                    <h6>
-                        @if (item.Link != "")
-                        {<span class="badge badge-info"> Link </span>}
-                        @if (item.Link != "")
-                        {<a href="@item.Link" target="_blank" class="stretched-link"></a>}
-                    </h6>
-                    <h5 class="card-title">
-                        @item.Item
-                    </h5>
-                    <p class="card-text">
-                        @item.Notes
-                    </p>
-
-                </div>
-                <div class="card-footer">
-                    @if (item.Claimer == UserIdService.userId)
-                    {<div> <button @onclick="() => unclaimItem(item)">Unclaim</button> </div>}
-                    else if (item.Claimer == "")
-                    {<div>    <button @onclick="() => claimItem(item)">Claim!</button> </div>}
-                    else
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="card h-100">
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                     {
-                        {<span class="badge badge-primary"> Claimed </span>}
+                        <img src="@item.ImageUrl" class="card-img-top" alt="@item.Item" style="max-height: 200px; object-fit: contain; padding: 10px;" />
                     }
-                    <small class="text-muted">
-                        Updated at @item.DateUpdated
-                    </small>
+                    <div class="card-body" style="position:relative">
+                        <h6>
+                            @if (item.Link != "")
+                            {<span class="badge badge-info"> Link </span>}
+                            @if (item.Link != "")
+                            {<a href="@item.Link" target="_blank" class="stretched-link"></a>}
+                        </h6>
+                        <h5 class="card-title">
+                            @item.Item
+                        </h5>
+                        <p class="card-text">
+                            @item.Notes
+                        </p>
+
+                    </div>
+                    <div class="card-footer">
+                        @if (item.Claimer == UserIdService.userId)
+                        {<div> <button class="btn btn-warning btn-sm" @onclick="() => unclaimItem(item)">Unclaim</button> </div>}
+                        else if (item.Claimer == "")
+                        {<div> <button class="btn btn-success btn-sm" @onclick="() => claimItem(item)">Claim!</button> </div>}
+                        else
+                        {
+                            {<span class="badge badge-primary"> Claimed </span>}
+                        }
+                        <small class="text-muted">
+                            Updated at @item.DateUpdated
+                        </small>
+                    </div>
                 </div>
             </div>
         }
