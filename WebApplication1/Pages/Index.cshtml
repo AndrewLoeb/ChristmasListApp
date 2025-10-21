@@ -16,5 +16,5 @@
 
 
 <div class="someclass">
-    @(await Html.RenderComponentAsync<Login>(RenderMode.ServerPrerendered))
+<component type="typeof(Login)" render-mode="ServerPrerendered" />
 </div>
