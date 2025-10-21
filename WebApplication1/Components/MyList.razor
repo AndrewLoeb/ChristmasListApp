@@ -50,9 +50,9 @@
                         <button type="button" class="btn btn-secondary" @onclick="cancelEditItem">Cancel</button>
                     </div>
                 </td>
-                <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" /> </form> </td>
-                <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" /> </form> </td>
-                <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" /> </form></td>
+                <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" maxlength="200" /> </form> </td>
+                <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" maxlength="500" /> </form> </td>
+                <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" maxlength="2000" /> </form></td>
                 <td></td>
             </tr>
         }
@@ -92,13 +92,13 @@
         <form>
             <div class="form-row">
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" />
+                    <input type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" maxlength="200" />
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" />
+                    <input type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" maxlength="500" />
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" size="15" />
+                    <input type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" size="15" maxlength="2000" />
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-success" @onclick="addItem">Add</button>
@@ -116,7 +116,7 @@
 }
 else
 {
-    <textarea class="form-control" cols="40" rows="5" @bind="newNotes"></textarea>
+    <textarea class="form-control" cols="40" rows="5" @bind="newNotes" maxlength="500"></textarea>
     <div class="mt-2">
         <button type="button" class="btn btn-success" @onclick="submitEditNotes">Save Notes</button>
         <button type="button" class="btn btn-secondary ml-2" @onclick="cancelEditNotes">Cancel</button>
@@ -211,6 +211,56 @@ else
         private string originalItemNotes = "";
         private string originalItemLink = "";
 
+        // Validation constants
+        private const int MAX_ITEM_NAME_LENGTH = 200;
+        private const int MAX_NOTES_LENGTH = 500;
+        private const int MAX_LINK_LENGTH = 2000;
+
+        private bool ValidateUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return true; // URL is optional
+
+            // Check length
+            if (url.Length > MAX_LINK_LENGTH)
+                return false;
+
+            // Check if it's a valid URI
+            return Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
+                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        }
+
+        private bool ValidateItemName(string itemName)
+        {
+            if (string.IsNullOrWhiteSpace(itemName))
+            {
+                toastService.ShowError("Item name is required.");
+                return false;
+            }
+
+            if (itemName.Length > MAX_ITEM_NAME_LENGTH)
+            {
+                toastService.ShowError($"Item name cannot exceed {MAX_ITEM_NAME_LENGTH} characters.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ValidateNotes(string notes)
+        {
+            if (string.IsNullOrWhiteSpace(notes))
+                return true; // Notes are optional
+
+            if (notes.Length > MAX_NOTES_LENGTH)
+            {
+                toastService.ShowError($"Notes cannot exceed {MAX_NOTES_LENGTH} characters.");
+                return false;
+            }
+
+            return true;
+        }
+
         public void editNotes()
         {
             // Prevent editing if an item is being edited
@@ -225,6 +275,10 @@ else
         }
         public void submitEditNotes()
         {
+            // Validate notes length
+            if (!ValidateNotes(newNotes))
+                return;
+
             ListService.UpdateNotes(UserIdService.userId, newNotes);
             _myNotes = newNotes;
             editNotesFlag = 0;
@@ -242,6 +296,19 @@ else
 
             if (newItemNotes.Equals("Notes (Optional)")) { newItemNotes = ""; }
             if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
+
+            // Validate inputs
+            if (!ValidateItemName(newItemItem))
+                return;
+
+            if (!ValidateNotes(newItemNotes))
+                return;
+
+            if (!ValidateUrl(newItemLink))
+            {
+                toastService.ShowError("Please enter a valid URL (must start with http:// or https://).");
+                return;
+            }
 
             string imageUrl = "";
             decimal? price = null;
@@ -313,6 +380,19 @@ else
         }
         public void submitEditItem(ItemModel item)
         {
+            // Validate inputs
+            if (!ValidateItemName(item.Item))
+                return;
+
+            if (!ValidateNotes(item.Notes))
+                return;
+
+            if (!ValidateUrl(item.Link))
+            {
+                toastService.ShowError("Please enter a valid URL (must start with http:// or https://).");
+                return;
+            }
+
             ListService.UpdateItem(item.ItemId, item.Item, item.Notes, item.Link);
             editItemId = 0;
             toastService.ShowSuccess("Saved " + item.Item + "!");
