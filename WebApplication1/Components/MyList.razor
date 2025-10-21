@@ -24,11 +24,12 @@
     <table class="table table-striped">
         <thead>
             <tr>
+                <th width="100px"></th>
                 <th width="150px"></th>
-                <th width="400px">Item</th>
-                <th width="400px">Notes</th>
+                <th width="350px">Item</th>
+                <th width="350px">Notes</th>
                 <th width="200px">Link</th>
-                <th width="200px">Date Added</th>
+                <th width="150px">Date Added</th>
             </tr>
         </thead>
         <tbody>
@@ -37,6 +38,12 @@
             @if (@item.ItemId == editItemId)
         {
             <tr>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+                    }
+                </td>
                 <td>    <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)">Save</button> </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" /> </form> </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" /> </form> </td>
@@ -48,14 +55,25 @@
         {
         <tr>
             <td>
+                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                {
+                    <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+                }
+            </td>
+            <td>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)">Edit</button>
                     <button type="button" class="btn btn-secondary" @onclick="() => showDeleteConfirmation(item)">Delete</button>
                 </div>
             </td>
             <td>@item.Item</td>
-            <td style="word-wrap:break-word; max-width:400px"> @item.Notes </td>
-            <td style="word-wrap:break-word; max-width:400px"><a href="@item.Link" target="_blank"> @item.Link</a></td>
+            <td style="word-wrap:break-word; max-width:350px"> @item.Notes </td>
+            <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
+                @if (!string.IsNullOrWhiteSpace(item.Link))
+                {
+                    <a href="@item.Link" target="_blank" title="@item.Link">@(item.Link.Length > 30 ? item.Link.Substring(0, 30) + "..." : item.Link)</a>
+                }
+            </td>
             <td>@item.DateUpdated</td>
         </tr>
         }

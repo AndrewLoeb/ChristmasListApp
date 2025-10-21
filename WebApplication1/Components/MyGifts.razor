@@ -11,19 +11,31 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th width="200">Elf</th>
-            <th width="400">Item</th>
-            <th>Link</th>
-            <th width="200">Date Claimed</th>
+            <th width="100"></th>
+            <th width="150">Elf</th>
+            <th width="350">Item</th>
+            <th width="250">Link</th>
+            <th width="150">Date Claimed</th>
         </tr>
     </thead>
     <tbody>
         @foreach (ItemModel item in myGifts)
         {
             <tr>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+                    }
+                </td>
                 <td>@item.Name</td>
                 <td>@item.Item</td>
-                <td>@item.Link</td>
+                <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
+                    @if (!string.IsNullOrWhiteSpace(item.Link))
+                    {
+                        <a href="@item.Link" target="_blank" title="@item.Link">@(item.Link.Length > 35 ? item.Link.Substring(0, 35) + "..." : item.Link)</a>
+                    }
+                </td>
                 <td>@item.DateClaimed</td>
             </tr>
         }
