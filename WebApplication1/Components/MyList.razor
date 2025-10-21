@@ -49,7 +49,7 @@
             <td>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)">Edit</button>
-                    <button type="button" class="btn btn-secondary" @onclick="() => deleteItem(item)">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showDeleteConfirmation(item)">Delete</button>
                 </div>
             </td>
             <td>@item.Item</td>
@@ -96,6 +96,30 @@ else
     <button type="button" class="btn btn-success" @onclick="submitEditNotes">Save Notes</button>
 }
 
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="close" @onclick="cancelDelete" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong>@itemToDelete?.Item</strong>?</p>
+                    <p class="text-muted">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="cancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
     @code
 {
@@ -114,6 +138,8 @@ else
         public int editItemId = 0;
         public int editNotesFlag = 0;
         public string newNotes = "";
+        public bool showDeleteModal = false;
+        public ItemModel itemToDelete = null;
 
         public void editNotes()
         {
@@ -154,10 +180,27 @@ else
             editItemId = 0;
             toastService.ShowSuccess("Saved " + item.Item + "!");
         }
-        public void deleteItem(ItemModel item)
+        public void showDeleteConfirmation(ItemModel item)
         {
-            ListService.DeleteItem(item.ItemId);
-            toastService.ShowSuccess("Deleted " + item.Item + "!");
+            itemToDelete = item;
+            showDeleteModal = true;
+        }
+
+        public void cancelDelete()
+        {
+            showDeleteModal = false;
+            itemToDelete = null;
+        }
+
+        public void confirmDelete()
+        {
+            if (itemToDelete != null)
+            {
+                ListService.DeleteItem(itemToDelete.ItemId);
+                toastService.ShowSuccess("Deleted " + itemToDelete.Item + "!");
+                showDeleteModal = false;
+                itemToDelete = null;
+            }
         }
 
     }
