@@ -21,6 +21,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [ ] **Improve mobile responsiveness** - Fix card-columns layout issues in ListReview
 
 ## 🔧 Low Priority / Nice to Have
+- [ ] **Admin page for batch product info refresh** - Update all legacy items with missing metadata
 - [ ] **Manual price field** - Let users enter product prices for budget tracking
 - [ ] **Upgrade Bootstrap 4 → 5** - Remove jQuery dependency, modernize UI
 - [ ] **Add loading spinners** - Visual feedback during async operations
