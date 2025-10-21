@@ -13,7 +13,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 
 ## 📋 Medium Priority
 
-- [ ] **OpenGraph URL scraping** - Auto-populate item details (images, titles) from product links
+- [x] **OpenGraph URL scraping** - Auto-populate item images from product links (Amazon requires PA-API - see Feature Enhancements)
 - [ ] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns
 - [ ] **Add input validation** - Validate URLs, check for empty item names, character limits
 - [ ] **Add Cancel buttons** - Allow users to exit edit mode without saving (My List items & notes). Only edit one item at a time
@@ -31,8 +31,9 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 
 ## 💡 Feature Enhancements
 
+- [ ] **Amazon PA-API integration** - Get product images and prices from Amazon (requires Associate account with sales)
+- [ ] **Manual price entry field** - Allow users to manually enter prices when auto-detection fails
 - [ ] **Budget tracking** - Sum up prices, show spending totals per person
-- [ ] **Amazon PA-API integration** - Automated price updates for Amazon links (requires Associate account)
 - [ ] **Search and filter** - Find items quickly in List Review
 - [ ] **Item categories/tags** - Organize items by type (books, electronics, etc.)
 - [ ] **Remember Me Functionality** - Allow a user to stay registered across sessions

@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
+@inject ProductMetadataService MetadataService
 
 @using Blazored.Toast
 @using Blazored.Toast.Services
@@ -191,14 +192,46 @@ else
             editNotesFlag = 0;
             toastService.ShowSuccess("Saved Notes");
         }
-        public void addItem()
+        public async Task addItem()
         {
             System.Console.WriteLine($"Added: {newItemItem}");
 
             if (newItemNotes.Equals("Notes (Optional)")) { newItemNotes = ""; }
             if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
 
-            ListService.AddItem(UserIdService.userId, newItemItem, newItemNotes, newItemLink);
+            string imageUrl = "";
+            decimal? price = null;
+            string metadataFetchedDate = "";
+
+            // If there's a link, try to fetch product metadata
+            if (!string.IsNullOrWhiteSpace(newItemLink))
+            {
+                try
+                {
+                    toastService.ShowInfo("Fetching product details...");
+                    var metadata = await MetadataService.FetchMetadataAsync(newItemLink);
+
+                    if (metadata.Success)
+                    {
+                        imageUrl = metadata.ImageUrl ?? "";
+                        price = metadata.Price;
+                        metadataFetchedDate = DateTime.Now.ToString();
+
+                        Console.WriteLine($"Fetched metadata - Image: {imageUrl}, Price: {price}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Metadata fetch failed: {metadata.ErrorMessage}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching metadata: {ex.Message}");
+                    // Continue anyway - we can save without metadata
+                }
+            }
+
+            ListService.AddItem(UserIdService.userId, newItemItem, newItemNotes, newItemLink, imageUrl, price, metadataFetchedDate);
             toastService.ShowSuccess("Added " + newItemItem + "!");
 
             //newItemItem = "New Item";

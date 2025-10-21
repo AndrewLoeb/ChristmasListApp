@@ -27,6 +27,7 @@ namespace WebApplication1
             services.AddControllers();
             services.AddTransient<googleSheetsSpiceService>();
             services.AddTransient<googleSheetsListService>();
+            services.AddTransient<ProductMetadataService>();
             services.AddScoped<userIdService>();
             services.AddScoped<allListsService>();
             services.AddBlazoredToast();
