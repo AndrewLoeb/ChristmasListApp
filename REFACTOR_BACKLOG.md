@@ -8,7 +8,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 
 - [ ] **Bulk load data from backend** - Speed up site by loading all items at once
 - [ ] **Add delete confirmations** - Prevent accidental item deletion (MyList.razor:157-161)
-- [ ] **Fix typo in method name** - `GetAllItmes` → `GetAllItems` (MyGifts.razor:34, service method)
+- [x] **Fix typo in method name** - `GetAllItmes` → `GetAllItems` (MyGifts.razor:34, service method)
 - [ ] **Add error handling** - Show user-friendly messages when Google Sheets API fails
 
 ## 📋 Medium Priority

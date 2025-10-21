@@ -31,5 +31,5 @@
 </table>
 
 @code {
-    public dynamic myGifts => ListService.GetAllItmes().Where(i => i.Claimer == UserIdService.userId).Where(i => i.Active == 1);
+    public dynamic myGifts => ListService.GetAllItems().Where(i => i.Claimer == UserIdService.userId).Where(i => i.Active == 1);
 }

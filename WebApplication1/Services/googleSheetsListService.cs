@@ -100,7 +100,7 @@ namespace WebApplication1.Services
             updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
             var appendReponse = updateRequest.Execute();
         }
-        public List<ItemModel> GetAllItmes()
+        public List<ItemModel> GetAllItems()
         {
             var AllItems = new List<ItemModel>();
             var range = $"{itemSheet}!A:I";
@@ -227,7 +227,7 @@ namespace WebApplication1.Services
             int mynewID = 1;
 
             //var myInvList = Spices_GetList();
-            List<ItemModel> AllLists = GetAllItmes();
+            List<ItemModel> AllLists = GetAllItems();
             int maxId = AllLists.Max(i => i.ItemId);
 
             var newItem = new List<object>() { maxId+1, userId, newItemItem, newItemNotes, newItemLink, DateTime.Now, "", "", 1 };
