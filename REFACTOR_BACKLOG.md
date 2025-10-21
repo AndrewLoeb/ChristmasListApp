@@ -14,11 +14,11 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 ## 📋 Medium Priority
 
 - [x] **OpenGraph URL scraping** - Auto-populate item images from product links (Amazon requires PA-API - see Feature Enhancements)
-- [ ] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns
+- [x] **Add Cancel buttons** - Allow users to exit edit mode without saving (My List items & notes). Only edit one item at a time
 - [ ] **Add input validation** - Validate URLs, check for empty item names, character limits
-- [ ] **Add Cancel buttons** - Allow users to exit edit mode without saving (My List items & notes). Only edit one item at a time
-- [ ] **Move Google Sheets credentials** - Extract hardcoded SpreadsheetId to configuration
 - [ ] **Improve mobile responsiveness** - Fix card-columns layout issues in ListReview
+- [ ] **Move Google Sheets credentials** - Extract hardcoded SpreadsheetId to configuration
+- [ ] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns
 
 ## 🔧 Low Priority / Nice to Have
 - [ ] **Manual refresh button for product metadata** - Add icon/button to re-fetch images for individual items

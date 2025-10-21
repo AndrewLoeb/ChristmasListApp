@@ -44,7 +44,12 @@
                         <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
                     }
                 </td>
-                <td>    <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)">Save</button> </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)">Save</button>
+                        <button type="button" class="btn btn-secondary" @onclick="cancelEditItem">Cancel</button>
+                    </div>
+                </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" /> </form> </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" /> </form> </td>
                 <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" /> </form></td>
@@ -112,7 +117,10 @@
 else
 {
     <textarea class="form-control" cols="40" rows="5" @bind="newNotes"></textarea>
-    <button type="button" class="btn btn-success" @onclick="submitEditNotes">Save Notes</button>
+    <div class="mt-2">
+        <button type="button" class="btn btn-success" @onclick="submitEditNotes">Save Notes</button>
+        <button type="button" class="btn btn-secondary ml-2" @onclick="cancelEditNotes">Cancel</button>
+    </div>
 }
 
 <!-- Delete Confirmation Modal -->
@@ -198,8 +206,20 @@ else
         public bool showDeleteModal = false;
         public ItemModel itemToDelete = null;
 
+        // Store original values for cancel functionality
+        private string originalItemName = "";
+        private string originalItemNotes = "";
+        private string originalItemLink = "";
+
         public void editNotes()
         {
+            // Prevent editing if an item is being edited
+            if (editItemId != 0)
+            {
+                toastService.ShowWarning("Please save or cancel the current item first.");
+                return;
+            }
+
             newNotes = myNotes;
             editNotesFlag = 1;
         }
@@ -209,6 +229,12 @@ else
             _myNotes = newNotes;
             editNotesFlag = 0;
             toastService.ShowSuccess("Saved Notes");
+        }
+
+        public void cancelEditNotes()
+        {
+            newNotes = "";
+            editNotesFlag = 0;
         }
         public async Task addItem()
         {
@@ -264,6 +290,25 @@ else
         }
         public void editItem(ItemModel item)
         {
+            // Prevent editing if notes are being edited
+            if (editNotesFlag == 1)
+            {
+                toastService.ShowWarning("Please save or cancel your notes edit first.");
+                return;
+            }
+
+            // Prevent editing if another item is already being edited
+            if (editItemId != 0)
+            {
+                toastService.ShowWarning("Please save or cancel the current item first.");
+                return;
+            }
+
+            // Store original values for cancel functionality
+            originalItemName = item.Item;
+            originalItemNotes = item.Notes ?? "";
+            originalItemLink = item.Link ?? "";
+
             editItemId = item.ItemId;
         }
         public void submitEditItem(ItemModel item)
@@ -273,6 +318,20 @@ else
             toastService.ShowSuccess("Saved " + item.Item + "!");
             // Refresh the list
             _myList = null;
+        }
+
+        public void cancelEditItem()
+        {
+            // Restore original values
+            var item = myList.FirstOrDefault(i => i.ItemId == editItemId);
+            if (item != null)
+            {
+                item.Item = originalItemName;
+                item.Notes = originalItemNotes;
+                item.Link = originalItemLink;
+            }
+
+            editItemId = 0;
         }
         public void showDeleteConfirmation(ItemModel item)
         {
