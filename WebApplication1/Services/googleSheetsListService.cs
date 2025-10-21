@@ -61,7 +61,6 @@ namespace WebApplication1.Services
             {
                 foreach (var row in values)
                 {
-                    Console.WriteLine(row);
                     j++;
                     if (j > 1)
                     {
@@ -192,12 +191,21 @@ namespace WebApplication1.Services
         public List<ListModel> GetAllLists(List<UserModel> userList)
         {
             var AllLists = new List<ListModel>();
+
+            // Load all items once instead of calling GetMyList for each user
+            var allItems = GetAllItems();
+
             foreach(UserModel user in userList)
             {
                 int itemsListed = 0;
                 int itemsClaimed = 0;
                 var lastUpdated = DateTime.Parse("2022-12-26T00:00:00.000+00:00");
-                List<ItemModel> MyList = GetMyList(user.Name);
+
+                // Filter items for this user from the already-loaded list
+                List<ItemModel> MyList = allItems
+                    .Where(i => i.Name == user.Name && i.Active == 1)
+                    .ToList();
+
                 foreach (ItemModel item in MyList)
                 {
                     itemsListed++;

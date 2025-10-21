@@ -72,8 +72,32 @@
     public int tabIndex = 0;
     public string LoadingMessage = "";
 
-    public List<UserModel> userList => ListService.Users_GetList();
-    public List<ListModel> AllLists => ListService.GetAllLists(userList);
+    private List<UserModel> _userList;
+    private List<ListModel> _allLists;
+
+    public List<UserModel> userList
+    {
+        get
+        {
+            if (_userList == null)
+            {
+                _userList = ListService.Users_GetList();
+            }
+            return _userList;
+        }
+    }
+
+    public List<ListModel> AllLists
+    {
+        get
+        {
+            if (_allLists == null)
+            {
+                _allLists = ListService.GetAllLists(userList);
+            }
+            return _allLists;
+        }
+    }
 
 
     public async Task Set_ShowLists()
