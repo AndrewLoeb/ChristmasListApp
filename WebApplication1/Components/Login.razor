@@ -18,14 +18,14 @@
 
 @if (!showLists)
 {
-    <h3>Login</h3>
-    <div>
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <h3 class="mb-4">Login</h3>
 
-        <form @onsubmit="Set_ShowLists">
-            <div class="form-row">
-                <div class="col">
-
-                    <select class="form-control" @bind="userId">
+            <form @onsubmit="Set_ShowLists">
+                <div class="mb-3">
+                    <label for="userSelect" class="form-label">Select Elf</label>
+                    <select id="userSelect" class="form-control" @bind="userId">
                         <option value="">Select Elf... </option>
                         @foreach (UserModel user in userList)
                         {
@@ -33,11 +33,14 @@
                         }
                     </select>
                 </div>
-                <div class="col">
-                    <input type="password" placeholder="Enter Password" class="form-control" @bind="password" size="20" />
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input id="password" type="password" placeholder="Enter Password" class="form-control" @bind="password" />
                 </div>
-                <div class="col">
-                    <button type="button" class="btn btn-success" @onclick="Set_ShowLists" disabled="@isLoading">
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-success w-100" @onclick="Set_ShowLists" disabled="@isLoading">
                         @if (isLoading)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -49,15 +52,16 @@
                         }
                     </button>
                 </div>
-            </div>
-        </form>
-    </div>
-    @if (!string.IsNullOrEmpty(LoadingMessage) && !isLoading)
-    {
-        <div class="alert alert-info mt-3">
-            @LoadingMessage
+            </form>
+
+            @if (!string.IsNullOrEmpty(LoadingMessage) && !isLoading)
+            {
+                <div class="alert alert-info mt-3">
+                    @LoadingMessage
+                </div>
+            }
         </div>
-    }
+    </div>
 }
 
 
@@ -65,9 +69,9 @@
 {
     <h3> Welcome @UserIdService.userId!</h3>
     <div class="btn-group btn-group-lg" role="group">
-        <button type="button" class="btn btn-outline-secondary" @onclick="Set_MyList">My List</button>
-        <button type="button" class="btn btn-outline-secondary" @onclick="Set_ListReview">List Review</button>
-        <button type="button" class="btn btn-outline-secondary" @onclick="Set_MyGifts">My Gifts</button>
+        <button type="button" class="btn btn-outline-secondary @(tabIndex == 1 ? "active" : "")" @onclick="Set_MyList">My List</button>
+        <button type="button" class="btn btn-outline-secondary @(tabIndex == 2 ? "active" : "")" @onclick="Set_ListReview">List Review</button>
+        <button type="button" class="btn btn-outline-secondary @(tabIndex == 3 ? "active" : "")" @onclick="Set_MyGifts">My Gifts</button>
     </div>
     <br />
 

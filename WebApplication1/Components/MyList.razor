@@ -15,8 +15,8 @@
     <table class="table table-striped" aria-label="My wish list items">
         <thead>
             <tr>
-                <th scope="col" width="100px">Image</th>
                 <th scope="col" width="150px">Actions</th>
+                <th scope="col" width="100px"></th>
                 <th scope="col" width="350px">Item</th>
                 <th scope="col" width="350px">Notes</th>
                 <th scope="col" width="200px">Link</th>
@@ -30,16 +30,16 @@
         {
             <tr>
                 <td>
-                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                    {
-                        <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
-                    }
-                </td>
-                <td>
                     <div class="btn-group" role="group" aria-label="Edit item actions">
                         <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)" aria-label="Save changes">Save</button>
                         <button type="button" class="btn btn-secondary" @onclick="cancelEditItem" aria-label="Cancel editing">Cancel</button>
                     </div>
+                </td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+                    }
                 </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" maxlength="200" aria-label="Item name" /> </form> </td>
                 <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" maxlength="500" aria-label="Item notes" /> </form> </td>
@@ -51,16 +51,16 @@
         {
         <tr>
             <td>
-                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                {
-                    <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
-                }
-            </td>
-            <td>
                 <div class="btn-group" role="group" aria-label="@($"Actions for {item.Item}")">
                     <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)" aria-label="@($"Edit {item.Item}")">Edit</button>
                     <button type="button" class="btn btn-secondary" @onclick="() => showDeleteConfirmation(item)" aria-label="@($"Delete {item.Item}")">Delete</button>
                 </div>
+            </td>
+            <td>
+                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                {
+                    <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+                }
             </td>
             <td>@item.Item</td>
             <td style="word-wrap:break-word; max-width:350px"> @item.Notes </td>
@@ -78,34 +78,39 @@
     </table>
 </div>
     <br />
-    <div>
-        <h3 id="add-item-heading">Add Item</h3>
-        <form aria-labelledby="add-item-heading">
-            <div class="form-row">
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" maxlength="200" aria-label="New item name" required />
-                </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" maxlength="500" aria-label="Optional notes for item" />
-                </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" size="15" maxlength="2000" aria-label="Optional URL link for item" />
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-success" @onclick="addItem" disabled="@isAddingItem">
-                        @if (isAddingItem)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span>Adding...</span>
-                        }
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <h3 id="add-item-heading">Add Item</h3>
+            <form aria-labelledby="add-item-heading">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label for="newItemName" class="form-label">Item Name</label>
+                        <input id="newItemName" type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" maxlength="200" aria-label="New item name" required />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="newItemNotes" class="form-label">Notes (Optional)</label>
+                        <input id="newItemNotes" type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" maxlength="500" aria-label="Optional notes for item" />
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <label for="newItemLink" class="form-label">Link (Optional)</label>
+                        <input id="newItemLink" type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" maxlength="2000" aria-label="Optional URL link for item" />
+                    </div>
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <button type="button" class="btn btn-success w-100" @onclick="addItem" disabled="@isAddingItem">
+                            @if (isAddingItem)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Adding...</span>
+                            }
                         else
                         {
                             <span>Add</span>
                         }
-                    </button>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 
     <hr />

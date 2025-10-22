@@ -1,0 +1,137 @@
+/* ============================================
+   Theme Variables - Modern Christmas Color Scheme
+   ============================================ */
+
+:root {
+    /* Primary Colors - Modern Christmas Theme */
+    --color-primary: #2D5F4E;           /* Deep Pine Green - primary actions, headers */
+    --color-primary-light: #3A7A63;     /* Lighter pine for hover states */
+    --color-primary-dark: #1F4437;      /* Darker pine for active states */
+    --color-primary-rgb: 45, 95, 78;    /* RGB for transparency */
+
+    --color-secondary: #D4AF37;         /* Gold - accents, highlights */
+    --color-secondary-light: #E6C558;   /* Lighter gold */
+    --color-secondary-dark: #B8941F;    /* Darker gold */
+    --color-secondary-rgb: 212, 175, 55;
+
+    --color-accent: #D6001C;            /* Cranberry Red - festive accent */
+    --color-accent-light: #E63946;      /* Lighter cranberry */
+    --color-accent-dark: #A80016;       /* Darker cranberry */
+
+    /* Semantic Colors */
+    --color-success: #2D5F4E;           /* Pine green for success states */
+    --color-success-light: #3A7A63;
+    --color-danger: #D6001C;            /* Cranberry red for errors/delete */
+    --color-danger-light: #E63946;
+    --color-warning: #D4AF37;           /* Gold for warnings */
+    --color-info: #4A7C8C;              /* Muted teal for info */
+
+    /* Neutral Colors */
+    --color-white: #FFFFFF;
+    --color-light: #F8F9FA;
+    --color-lighter: #FAFBFC;
+    --color-gray-100: #F5F5F5;
+    --color-gray-200: #E9ECEF;
+    --color-gray-300: #DEE2E6;
+    --color-gray-400: #CED4DA;
+    --color-gray-500: #ADB5BD;
+    --color-gray-600: #6C757D;
+    --color-gray-700: #495057;
+    --color-gray-800: #343A40;
+    --color-gray-900: #212529;
+    --color-dark: #1A1A1A;
+
+    /* Background Colors */
+    --bg-body: #FFFFFF;
+    --bg-card: #F8FAF9;
+    --bg-sidebar: linear-gradient(180deg, var(--color-primary-dark) 0%, #0F2219 70%);
+    --bg-navbar: linear-gradient(110deg, var(--color-primary) 60%, var(--color-accent) 60%);
+    --bg-footer: linear-gradient(110deg, var(--color-accent) 60%, var(--color-primary) 60%);
+
+    /* Text Colors */
+    --text-primary: var(--color-gray-900);
+    --text-secondary: var(--color-gray-700);
+    --text-muted: var(--color-gray-600);
+    --text-light: var(--color-gray-500);
+    --text-on-primary: var(--color-white);
+    --text-on-secondary: var(--color-gray-900);
+    --text-on-accent: var(--color-white);
+    --text-link: var(--color-primary);
+    --text-link-hover: var(--color-primary-light);
+
+    /* Border Colors */
+    --border-color: var(--color-gray-300);
+    --border-color-light: var(--color-gray-200);
+    --border-color-dark: var(--color-gray-400);
+
+    /* Shadow Variables */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    --shadow-card: 0 0.25rem 0.5rem rgba(var(--color-primary-rgb), 0.1);
+    --shadow-card-hover: 0 0.75rem 1.5rem rgba(var(--color-primary-rgb), 0.2);
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-pill: 50rem;
+
+    /* Transitions */
+    --transition-fast: 150ms ease-in-out;
+    --transition-base: 250ms ease-in-out;
+    --transition-slow: 350ms ease-in-out;
+
+    /* Typography */
+    --font-family-base: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-family-display: 'Yellowtail', cursive;
+    --font-family-card: 'Nunito', sans-serif;
+
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Z-index layers */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+}
+
+/* ============================================
+   Dark Mode Support (Optional - for future use)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    :root.dark-mode {
+        --bg-body: #1A1A1A;
+        --bg-card: #2D2520;
+        --text-primary: var(--color-gray-100);
+        --text-secondary: var(--color-gray-300);
+        --text-muted: var(--color-gray-400);
+        --border-color: var(--color-gray-700);
+        --border-color-light: var(--color-gray-800);
+    }
+}

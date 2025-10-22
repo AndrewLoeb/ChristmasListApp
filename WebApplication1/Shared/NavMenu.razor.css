@@ -1,53 +1,69 @@
 .navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: background-color var(--transition-fast);
+}
+
+.navbar-toggler:hover {
+    background-color: rgba(255, 255, 255, 0.25);
 }
 
 .top-row {
     height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .navbar-brand {
-    font-size: 1.1rem;
+    font-size: var(--font-size-lg);
+    color: var(--color-accent) !important;
 }
 
 .oi {
     width: 2rem;
-    font-size: 1.1rem;
+    font-size: var(--font-size-lg);
     vertical-align: text-top;
     top: -2px;
 }
 
 .nav-item {
-    font-size: 0.9rem;
-    padding-bottom: 0.5rem;
+    font-size: var(--font-size-sm);
+    padding-bottom: var(--spacing-sm);
 }
 
     .nav-item:first-of-type {
-        padding-top: 1rem;
+        padding-top: var(--spacing-md);
     }
 
     .nav-item:last-of-type {
-        padding-bottom: 1rem;
+        padding-bottom: var(--spacing-md);
     }
 
     .nav-item ::deep a {
-        color: #d7d7d7;
-        border-radius: 4px;
+        color: var(--color-gray-200);
+        border-radius: var(--radius-md);
+        border: 2px solid transparent;
         height: 3rem;
         display: flex;
         align-items: center;
         line-height: 3rem;
+        transition: all var(--transition-fast);
+        padding: 0 var(--spacing-md);
+        margin: 0 var(--spacing-sm);
     }
 
 .nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.25);
-    color: white;
+    background-color: var(--color-secondary);
+    color: var(--text-on-secondary);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-secondary-dark);
 }
 
 .nav-item ::deep a:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: white;
+    background-color: rgba(212, 175, 55, 0.15);
+    color: var(--color-secondary-light);
+    border-color: var(--color-secondary);
+    transform: translateX(4px);
 }
 
 @media (min-width: 641px) {

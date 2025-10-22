@@ -1,8 +1,10 @@
-/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification 
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 body {
     padding-top: 50px;
     padding-bottom: 20px;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
 }
 
 /* Wrapping element */
@@ -44,8 +46,8 @@ for details on configuring this project to bundle and minify static web assets. 
 
 .card-columns .card-body {
     height: 200px;
-    font-family: 'Nunito', sans-serif;
-    background: #fbfafd;
+    font-family: var(--font-family-card);
+    background: var(--bg-card);
 }
 
 .card-columns .card-img {
@@ -65,31 +67,70 @@ for details on configuring this project to bundle and minify static web assets. 
     background-size: cover; /* Resize the background image to cover the entire container */
 }
 
+.card {
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition-base);
+}
+
 .card-columns .card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(37,33,82,.12), 0 4px 8px rgba(37,33,82,.06);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-card-hover);
 }
 
 
 a.navbar-brand {
     white-space: normal;
-    font-family: 'Yellowtail', cursive;
-    font-size: xx-large;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
     text-align: center;
     word-break: break-all;
+    color: var(--color-white) !important;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.02em;
 }
 
 /*Backgrounds*/
 .bg-navbar {
-    background: -webkit-linear-gradient(110deg, #e9a8a6 60%, #252152 60%);
-    background: -o-linear-gradient(110deg, #e9a8a6 60%, #252152 60%);
-    background: -moz-linear-gradient(110deg, #e9a8a6 60%, #252152 60%);
-    background: linear-gradient(110deg, #e9a8a6 60%, #252152 60%);
+    background: var(--bg-navbar);
+    box-shadow: var(--shadow);
+}
+
+.bg-navbar .navbar-brand {
+    color: var(--color-white) !important;
+}
+
+.bg-navbar .nav-link {
+    color: var(--color-white) !important;
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.bg-navbar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--color-white) !important;
 }
 
 .bg-footer {
-    background: -webkit-linear-gradient(110deg, #252152 60%, #e9a8a6 60%);
-    background: -o-linear-gradient(110deg, #252152 60%, #e9a8a6 60%);
-    background: -moz-linear-gradient(110deg, #252152 60%, #e9a8a6 60%);
-    background: linear-gradient(110deg, #252152 60%, #e9a8a6 60%);
+    background: var(--bg-footer);
+    padding: var(--spacing-lg) 0;
+    color: var(--color-white);
+}
+
+.bg-footer a {
+    color: var(--color-white) !important;
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.bg-footer a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--color-white) !important;
 }
