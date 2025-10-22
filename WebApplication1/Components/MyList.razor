@@ -10,24 +10,17 @@
 @using Blazored.Toast.Services
 @inject IToastService toastService
 
-<BlazoredToasts Timeout="5"
-                ShowProgressBar="true"
-                IconType="IconType.FontAwesome"
-                SuccessClass="success-toast-override"
-                SuccessIcon="fa fa-bar-chart" />
-
-
 <h2>My List</h2>
 <div class="table-responsive-md">
-    <table class="table table-striped">
+    <table class="table table-striped" aria-label="My wish list items">
         <thead>
             <tr>
-                <th width="100px"></th>
-                <th width="150px"></th>
-                <th width="350px">Item</th>
-                <th width="350px">Notes</th>
-                <th width="200px">Link</th>
-                <th width="150px">Date Added</th>
+                <th scope="col" width="100px">Image</th>
+                <th scope="col" width="150px">Actions</th>
+                <th scope="col" width="350px">Item</th>
+                <th scope="col" width="350px">Notes</th>
+                <th scope="col" width="200px">Link</th>
+                <th scope="col" width="150px">Date Added</th>
             </tr>
         </thead>
         <tbody>
@@ -43,14 +36,14 @@
                     }
                 </td>
                 <td>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)">Save</button>
-                        <button type="button" class="btn btn-secondary" @onclick="cancelEditItem">Cancel</button>
+                    <div class="btn-group" role="group" aria-label="Edit item actions">
+                        <button type="button" class="btn btn-success" @onclick="() => submitEditItem(item)" aria-label="Save changes">Save</button>
+                        <button type="button" class="btn btn-secondary" @onclick="cancelEditItem" aria-label="Cancel editing">Cancel</button>
                     </div>
                 </td>
-                <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" maxlength="200" /> </form> </td>
-                <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" maxlength="500" /> </form> </td>
-                <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" maxlength="2000" /> </form></td>
+                <td> <form> <input type="text" class="form-control" @bind="@item.Item" size="40px" maxlength="200" aria-label="Item name" /> </form> </td>
+                <td> <form> <input type="text" class="form-control" @bind="@item.Notes" size="40px" maxlength="500" aria-label="Item notes" /> </form> </td>
+                <td><form>  <input type="text" class="form-control" @bind="@item.Link" onclick="this.select();" size="20" maxlength="2000" aria-label="Item URL" /> </form></td>
                 <td></td>
             </tr>
         }
@@ -64,9 +57,9 @@
                 }
             </td>
             <td>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)">Edit</button>
-                    <button type="button" class="btn btn-secondary" @onclick="() => showDeleteConfirmation(item)">Delete</button>
+                <div class="btn-group" role="group" aria-label="@($"Actions for {item.Item}")">
+                    <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)" aria-label="@($"Edit {item.Item}")">Edit</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showDeleteConfirmation(item)" aria-label="@($"Delete {item.Item}")">Delete</button>
                 </div>
             </td>
             <td>@item.Item</td>
@@ -86,60 +79,68 @@
 </div>
     <br />
     <div>
-        Add Item: 
-        <form>
+        <h3 id="add-item-heading">Add Item</h3>
+        <form aria-labelledby="add-item-heading">
             <div class="form-row">
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" maxlength="200" />
+                    <input type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" maxlength="200" aria-label="New item name" required />
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" maxlength="500" />
+                    <input type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" maxlength="500" aria-label="Optional notes for item" />
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" size="15" maxlength="2000" />
+                    <input type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" size="15" maxlength="2000" aria-label="Optional URL link for item" />
                 </div>
                 <div class="col">
-                    <button type="button" class="btn btn-success" @onclick="addItem">Add</button>
+                    <button type="button" class="btn btn-success" @onclick="addItem" disabled="@isAddingItem">
+                        @if (isAddingItem)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Adding...</span>
+                        }
+                        else
+                        {
+                            <span>Add</span>
+                        }
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 
     <hr />
-    <h3>Notes to Share:</h3>
+    <h3 id="notes-heading">Notes to Share:</h3>
     @if (editNotesFlag == 0)
 {
-    <p> @myNotes </p>
-    <button type="button" class="btn btn-secondary" @onclick="editNotes">Edit Notes</button>
+    <p aria-label="Your shared notes"> @myNotes </p>
+    <button type="button" class="btn btn-secondary" @onclick="editNotes" aria-label="Edit your shared notes">Edit Notes</button>
 }
 else
 {
-    <textarea class="form-control" cols="40" rows="5" @bind="newNotes" maxlength="500"></textarea>
+    <textarea class="form-control" cols="40" rows="5" @bind="newNotes" maxlength="500" aria-label="Edit shared notes" aria-describedby="notes-heading"></textarea>
     <div class="mt-2">
-        <button type="button" class="btn btn-success" @onclick="submitEditNotes">Save Notes</button>
-        <button type="button" class="btn btn-secondary ml-2" @onclick="cancelEditNotes">Cancel</button>
+        <button type="button" class="btn btn-success" @onclick="submitEditNotes" aria-label="Save notes changes">Save Notes</button>
+        <button type="button" class="btn btn-secondary ml-2" @onclick="cancelEditNotes" aria-label="Cancel notes editing">Cancel</button>
     </div>
 }
 
 <!-- Delete Confirmation Modal -->
 @if (showDeleteModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirm Delete</h5>
-                    <button type="button" class="close" @onclick="cancelDelete" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h5 class="modal-title" id="deleteModalTitle">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="cancelDelete" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete <strong>@itemToDelete?.Item</strong>?</p>
                     <p class="text-muted">This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="cancelDelete">Cancel</button>
-                    <button type="button" class="btn btn-danger" @onclick="confirmDelete">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="cancelDelete" aria-label="Cancel deletion">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="confirmDelete" aria-label="@($"Confirm delete {itemToDelete?.Item}")">Delete</button>
                 </div>
             </div>
         </div>
@@ -203,6 +204,7 @@ else
         public string newNotes = "";
         public bool showDeleteModal = false;
         public ItemModel itemToDelete = null;
+        public bool isAddingItem = false;
 
         // Store original values for cancel functionality
         private string originalItemName = "";
@@ -290,68 +292,86 @@ else
         }
         public async Task addItem()
         {
-            System.Console.WriteLine($"Added: {newItemItem}");
-
-            if (newItemNotes.Equals("Notes (Optional)")) { newItemNotes = ""; }
-            if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
-
-            // Validate inputs
-            if (!ValidateItemName(newItemItem))
-                return;
-
-            if (!ValidateNotes(newItemNotes))
-                return;
-
-            if (!ValidateUrl(newItemLink))
+            if (isAddingItem)
             {
-                toastService.ShowError("Please enter a valid URL (must start with http:// or https://).");
+                System.Console.WriteLine("addItem called while already adding - ignoring duplicate call");
                 return;
             }
 
-            string imageUrl = "";
-            decimal? price = null;
-            string metadataFetchedDate = "";
+            isAddingItem = true;
+            StateHasChanged();
+            await Task.Delay(10); // Small delay to ensure UI updates
 
-            // If there's a link, try to fetch product metadata
-            if (!string.IsNullOrWhiteSpace(newItemLink))
+            try
             {
-                try
+                System.Console.WriteLine($"Added: {newItemItem}");
+
+                if (newItemNotes.Equals("Notes (Optional)")) { newItemNotes = ""; }
+                if (newItemLink.Equals("Link (Optional)")) { newItemLink = ""; }
+
+                // Validate inputs
+                if (!ValidateItemName(newItemItem))
+                    return;
+
+                if (!ValidateNotes(newItemNotes))
+                    return;
+
+                if (!ValidateUrl(newItemLink))
                 {
-                    toastService.ShowInfo("Fetching product details...");
-                    var metadata = await MetadataService.FetchMetadataAsync(newItemLink);
+                    toastService.ShowError("Please enter a valid URL (must start with http:// or https://).");
+                    return;
+                }
 
-                    if (metadata.Success)
+                string imageUrl = "";
+                decimal? price = null;
+                string metadataFetchedDate = "";
+
+                // If there's a link, try to fetch product metadata
+                if (!string.IsNullOrWhiteSpace(newItemLink))
+                {
+                    try
                     {
-                        imageUrl = metadata.ImageUrl ?? "";
-                        price = metadata.Price;
-                        metadataFetchedDate = DateTime.Now.ToString();
+                        toastService.ShowInfo("Fetching product details...");
+                        var metadata = await MetadataService.FetchMetadataAsync(newItemLink);
 
-                        Console.WriteLine($"Fetched metadata - Image: {imageUrl}, Price: {price}");
+                        if (metadata.Success)
+                        {
+                            imageUrl = metadata.ImageUrl ?? "";
+                            price = metadata.Price;
+                            metadataFetchedDate = DateTime.Now.ToString();
+
+                            Console.WriteLine($"Fetched metadata - Image: {imageUrl}, Price: {price}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Metadata fetch failed: {metadata.ErrorMessage}");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.WriteLine($"Metadata fetch failed: {metadata.ErrorMessage}");
+                        Console.WriteLine($"Error fetching metadata: {ex.Message}");
+                        // Continue anyway - we can save without metadata
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error fetching metadata: {ex.Message}");
-                    // Continue anyway - we can save without metadata
-                }
+
+                ListService.AddItem(UserIdService.userId, newItemItem, newItemNotes, newItemLink, imageUrl, price, metadataFetchedDate);
+                toastService.ShowSuccess("Added " + newItemItem + "!");
+
+                //newItemItem = "New Item";
+                //newItemNotes = "Notes (Optional)";
+                //newItemLink = "Link (Optional)";
+                newItemItem = "";
+                newItemNotes = "";
+                newItemLink = "";
+
+                // Refresh the list
+                _myList = null;
             }
-
-            ListService.AddItem(UserIdService.userId, newItemItem, newItemNotes, newItemLink, imageUrl, price, metadataFetchedDate);
-            toastService.ShowSuccess("Added " + newItemItem + "!");
-
-            //newItemItem = "New Item";
-            //newItemNotes = "Notes (Optional)";
-            //newItemLink = "Link (Optional)";
-            newItemItem = "";
-            newItemNotes = "";
-            newItemLink = "";
-
-            // Refresh the list
-            _myList = null;
+            finally
+            {
+                isAddingItem = false;
+                StateHasChanged();
+            }
         }
         public void editItem(ItemModel item)
         {

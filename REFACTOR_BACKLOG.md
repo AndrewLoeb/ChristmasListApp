@@ -22,9 +22,8 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 
 ## 🔧 Low Priority / Nice to Have
 - [x] **Upgrade Bootstrap 4 → 5** - Remove jQuery dependency, modernize UI
-- [ ] **Add loading spinners** - Visual feedback during async operations
-- [ ] **Fix date types** - Change DateUpdated/DateClaimed from string to DateTime
-- [ ] **Improve accessibility** - Add ARIA labels, keyboard navigation
+- [x] **Add loading spinners** - Visual feedback during async operations (Login & MyList components)
+- [x] **Improve accessibility** - Add ARIA labels, keyboard navigation support
 - [ ] **UI theme and color enhancement** - Update theme to a modern professional feel (including login screen spacing)
 - [ ] **Manual refresh button for product metadata** - Add icon/button to re-fetch images for individual items
 - [ ] **Admin page for batch product info refresh** - Update all legacy items with missing metadata
@@ -44,6 +43,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 ## Won't Do (For Now)
 
 - **Fix password security** - Hash passwords instead of plain text. Decision: Keep plain text for family app, maintain manual access via Google Sheets. May revisit later.
+- **Fix date types** - Change DateUpdated/DateClaimed from string to DateTime. Decision: Data is loaded as text from Google Sheets; changing types would require data migration and risk breaking existing data. Current string format works fine for display purposes.
 - **Email notifications** - Notify when items are claimed/unclaimed
 - **Add pagination** - For lists with many items
 - **Add dark mode** - Theme toggle support

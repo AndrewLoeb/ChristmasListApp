@@ -37,12 +37,27 @@
                     <input type="password" placeholder="Enter Password" class="form-control" @bind="password" size="20" />
                 </div>
                 <div class="col">
-                    <button type="button" class="btn btn-success" @onclick="Set_ShowLists">Activate!</button>
+                    <button type="button" class="btn btn-success" @onclick="Set_ShowLists" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Activate!</span>
+                        }
+                    </button>
                 </div>
             </div>
         </form>
     </div>
-    <div> <h3> @LoadingMessage</h3></div>
+    @if (!string.IsNullOrEmpty(LoadingMessage) && !isLoading)
+    {
+        <div class="alert alert-info mt-3">
+            @LoadingMessage
+        </div>
+    }
 }
 
 
@@ -80,6 +95,7 @@
     public bool showLists = false;
     public int tabIndex = 0;
     public string LoadingMessage = "";
+    public bool isLoading = false;
 
     private List<UserModel> _userList;
     private List<ListModel> _allLists;
@@ -129,18 +145,38 @@
 
     public async Task Set_ShowLists()
     {
+        isLoading = true;
         LoadingMessage = "Loading...";
-        await UserIdService.SetUser(userId);
-        await allListsService.SetAllLists(userList, AllLists);
+        StateHasChanged();
+        await Task.Delay(10); // Small delay to ensure UI updates
 
-        if (password == null) { LoadingMessage = "Enter Password";  return; }
-
-        if (password.Equals(userList.Where(u => u.Name.Equals(userId)).Select(u => u.Password).FirstOrDefault()))
+        try
         {
-            showLists = true;
-            tabIndex = 1;
+            await UserIdService.SetUser(userId);
+            await allListsService.SetAllLists(userList, AllLists);
+
+            if (password == null)
+            {
+                LoadingMessage = "Enter Password";
+                return;
+            }
+
+            if (password.Equals(userList.Where(u => u.Name.Equals(userId)).Select(u => u.Password).FirstOrDefault()))
+            {
+                showLists = true;
+                tabIndex = 1;
+                LoadingMessage = "";
+            }
+            else
+            {
+                LoadingMessage = "Check Password.";
+            }
         }
-        LoadingMessage = "Check Password.";
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
     public async Task Set_MyList()
