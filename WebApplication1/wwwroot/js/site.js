@@ -3,6 +3,14 @@
 
 // Write your Javascript code.
 
+// Focus element by ID (for auto-focus on login)
+window.focusElement = function(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.focus();
+    }
+};
+
 // Claim/Unclaim animation triggers
 window.triggerClaimAnimation = function(itemId) {
     const card = document.getElementById('item-card-' + itemId);

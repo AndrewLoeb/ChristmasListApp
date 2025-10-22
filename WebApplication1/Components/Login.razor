@@ -2,9 +2,12 @@
 @using WebApplication1.Services
 @using WebApplication1.Components
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
 @inject allListsService allListsService
+@inject LocalStorageService LocalStorage
+@inject IJSRuntime JSRuntime
 
 @using Blazored.Toast
 @using Blazored.Toast.Services
@@ -36,7 +39,14 @@
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <input id="password" type="password" placeholder="Enter Password" class="form-control" @bind="password" />
+                    <input @ref="passwordInput" id="password" type="password" placeholder="Enter Password" class="form-control" @bind="password" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe" @bind="rememberMe" />
+                    <label class="form-check-label" for="rememberMe">
+                        Remember me
+                    </label>
                 </div>
 
                 <div class="mb-3">
@@ -67,7 +77,10 @@
 
 @if (showLists)
 {
-    <h3> Welcome @UserIdService.userId!</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Welcome @UserIdService.userId!</h3>
+        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Logout">Logout</button>
+    </div>
     <div class="btn-group btn-group-lg" role="group">
         <button type="button" class="btn btn-outline-secondary @(tabIndex == 1 ? "active" : "")" @onclick="Set_MyList">My List</button>
         <button type="button" class="btn btn-outline-secondary @(tabIndex == 2 ? "active" : "")" @onclick="Set_ListReview">List Review</button>
@@ -100,7 +113,9 @@
     public int tabIndex = 0;
     public string LoadingMessage = "";
     public bool isLoading = false;
+    public bool rememberMe = false;
 
+    private ElementReference passwordInput;
     private List<UserModel> _userList;
     private List<ListModel> _allLists;
 
@@ -147,6 +162,33 @@
     }
 
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Load saved username from LocalStorage if "Remember Me" was previously checked
+        var savedUsername = await LocalStorage.GetUsernameAsync();
+        if (!string.IsNullOrWhiteSpace(savedUsername))
+        {
+            userId = savedUsername;
+            rememberMe = true; // Check the "Remember me" box since we loaded a saved username
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrWhiteSpace(userId))
+        {
+            // If username was pre-filled from LocalStorage, focus the password field
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("focusElement", "password");
+            }
+            catch
+            {
+                // Silently fail if focus doesn't work (e.g., JavaScript not ready)
+            }
+        }
+    }
+
     public async Task Set_ShowLists()
     {
         isLoading = true;
@@ -167,9 +209,21 @@
 
             if (password.Equals(userList.Where(u => u.Name.Equals(userId)).Select(u => u.Password).FirstOrDefault()))
             {
+                // Login successful
                 showLists = true;
                 tabIndex = 1;
                 LoadingMessage = "";
+
+                // Save username to LocalStorage if "Remember Me" is checked
+                if (rememberMe)
+                {
+                    await LocalStorage.SaveUsernameAsync(userId);
+                }
+                else
+                {
+                    // Clear saved username if "Remember Me" is unchecked
+                    await LocalStorage.ClearUsernameAsync();
+                }
             }
             else
             {
@@ -181,6 +235,25 @@
             isLoading = false;
             StateHasChanged();
         }
+    }
+
+    public async Task Logout()
+    {
+        // Clear session
+        showLists = false;
+        tabIndex = 0;
+        password = "";
+        userId = "";
+        rememberMe = false;
+        LoadingMessage = "";
+
+        // Clear saved username from LocalStorage
+        await LocalStorage.ClearUsernameAsync();
+
+        // Reset user service
+        await UserIdService.SetUser("");
+
+        StateHasChanged();
     }
 
     public async Task Set_MyList()

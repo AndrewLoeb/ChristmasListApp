@@ -31,6 +31,7 @@ namespace WebApplication1
             services.AddTransient<GoogleImageSearchService>();
             services.AddScoped<userIdService>();
             services.AddScoped<allListsService>();
+            services.AddScoped<LocalStorageService>();
             services.AddBlazoredToast();
         }
 
