@@ -12,25 +12,90 @@
 
 <h2>List Review</h2>
 
-<div>
-    <select class="form-control" @bind="listUserId">
-        <option value="">Select Elf... </option>
-        @foreach (ListModel List in allListsService.AllLists)
-        {
-            @if (List.Name != UserIdService.userId)
+<!-- Family-Grouped Person Selection -->
+<div class="family-selection-container">
+    @foreach (var familyGroup in GetOrderedFamilies())
+    {
+        var familyName = familyGroup.Key;
+        var people = familyGroup.Value;
+        var isCollapsed = IsFamilyCollapsed(familyName);
+
+        <div class="family-section">
+            <!-- Family Header -->
+            <div class="family-header" @onclick="() => ToggleFamilyCollapse(familyName)">
+                <div>
+                    <span class="family-name">@familyName</span>
+                    <span class="person-count">(@people.Count)</span>
+                </div>
+                <span class="chevron @(isCollapsed ? "" : "expanded")">▼</span>
+            </div>
+
+            <!-- Person Cards -->
+            @if (!isCollapsed)
             {
-                <option value="@List.Name"> @List.dropDownStr  </option>
+                <div class="family-people-container">
+                    @foreach (var person in people)
+                    {
+                        var cardColorClass = GetCardColorClass(person);
+                        var isSelected = listUserId == person.Name;
+                        var myClaimedCount = GetMyClaimedCount(person);
+
+                        <div class="person-card @cardColorClass @(isSelected ? "selected" : "")"
+                             @onclick="() => SelectPerson(person.Name)">
+                            <div class="person-card-name">@person.Name</div>
+                            <div class="person-card-summary">
+                                <div class="person-card-summary-item">
+                                    <span>📝</span>
+                                    <span>@person.itemsListed</span>
+                                </div>
+                                <div class="person-card-summary-item">
+                                    <span>🎁</span>
+                                    <span>@person.itemsClaimed</span>
+                                </div>
+                                <div class="person-card-summary-item">
+                                    <span>🕐</span>
+                                    <span>@GetRelativeTime(person.lastUpdated)</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             }
-        }
-    </select>
+        </div>
+    }
 </div>
 
-@if (listUserId != "")
-{
-    <div>
-        <h3> @listUserId's List: </h3>
-    </div>
-    <div class="row">
+<!-- List Display Section -->
+<div class="list-review-section">
+    @if (string.IsNullOrEmpty(listUserId))
+    {
+        <div class="empty-state">
+            <p>Select a person to view their list</p>
+        </div>
+    }
+    else
+    {
+        <!-- List Header with Stats -->
+        <div class="list-review-header">
+            <h3>@listUserId's List</h3>
+            <div class="list-review-stats">
+                <div class="list-review-stat-item">
+                    <span>📝</span>
+                    <span>@listUserItems.itemsListed items</span>
+                </div>
+                <div class="list-review-stat-item">
+                    <span>🎁</span>
+                    <span>@listUserItems.itemsClaimed claimed</span>
+                </div>
+                <div class="list-review-stat-item">
+                    <span>🕐</span>
+                    <span>Updated @GetRelativeTime(listUserItems.lastUpdated)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Cards Grid -->
+        <div class="row">
         @foreach (ItemModel item in listUserItems.List)
         {
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
@@ -70,19 +135,155 @@
                 </div>
             </div>
         }
-    </div>
+        </div>
 
-    <hr />
+        <hr />
 
-    <h3>Notes:</h3>
-    <p> @listUserNotes </p>
-}
+        <h3>Notes:</h3>
+        <p> @listUserNotes </p>
+    }
+</div>
 
 @code {
     public string listUserId = "";
+    private Dictionary<string, bool> collapsedFamilies = new Dictionary<string, bool>();
 
-    public dynamic listUserNotes => allListsService.userList.FirstOrDefault(u => u.Name == listUserId).Notes;
+    public dynamic listUserNotes => allListsService.userList.FirstOrDefault(u => u.Name == listUserId)?.Notes;
     public dynamic listUserItems => allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId);
+
+    // Group all lists by family
+    private Dictionary<string, List<ListModel>> GetFamilyGroups()
+    {
+        var familyGroups = new Dictionary<string, List<ListModel>>();
+
+        foreach (var list in allListsService.AllLists)
+        {
+            var user = allListsService.userList.FirstOrDefault(u => u.Name == list.Name);
+            if (user != null && user.Name != UserIdService.userId) // Exclude current user
+            {
+                string family = string.IsNullOrWhiteSpace(user.Family) ? "Loeb" : user.Family;
+
+                if (!familyGroups.ContainsKey(family))
+                {
+                    familyGroups[family] = new List<ListModel>();
+                }
+                familyGroups[family].Add(list);
+            }
+        }
+
+        return familyGroups;
+    }
+
+    // Get current user's family name
+    private string GetCurrentUserFamily()
+    {
+        var currentUser = allListsService.userList.FirstOrDefault(u => u.Name == UserIdService.userId);
+        return string.IsNullOrWhiteSpace(currentUser?.Family) ? "Loeb" : currentUser.Family;
+    }
+
+    // Get ordered family groups (current user's family first, then alphabetically)
+    private List<KeyValuePair<string, List<ListModel>>> GetOrderedFamilies()
+    {
+        var familyGroups = GetFamilyGroups();
+        var currentFamily = GetCurrentUserFamily();
+        var ordered = new List<KeyValuePair<string, List<ListModel>>>();
+
+        // Add current user's family first if it exists
+        if (familyGroups.ContainsKey(currentFamily))
+        {
+            ordered.Add(new KeyValuePair<string, List<ListModel>>(currentFamily, familyGroups[currentFamily]));
+        }
+
+        // Add other families alphabetically
+        foreach (var family in familyGroups.OrderBy(f => f.Key))
+        {
+            if (family.Key != currentFamily)
+            {
+                ordered.Add(family);
+            }
+        }
+
+        return ordered;
+    }
+
+    // Check if family is collapsed
+    private bool IsFamilyCollapsed(string familyName)
+    {
+        if (!collapsedFamilies.ContainsKey(familyName))
+        {
+            // Default: current user's family expanded, others collapsed
+            collapsedFamilies[familyName] = familyName != GetCurrentUserFamily();
+        }
+        return collapsedFamilies[familyName];
+    }
+
+    // Toggle family collapsed state
+    private void ToggleFamilyCollapse(string familyName)
+    {
+        if (!collapsedFamilies.ContainsKey(familyName))
+        {
+            collapsedFamilies[familyName] = false;
+        }
+        else
+        {
+            collapsedFamilies[familyName] = !collapsedFamilies[familyName];
+        }
+    }
+
+    // Calculate items claimed by current user for a specific person
+    private int GetMyClaimedCount(ListModel list)
+    {
+        return list.List.Count(item => item.Claimer == UserIdService.userId);
+    }
+
+    // Get CSS class for person card based on status
+    private string GetCardColorClass(ListModel list)
+    {
+        if (list.itemsListed == 0)
+        {
+            return "person-card-grey";
+        }
+        else if (GetMyClaimedCount(list) > 0)
+        {
+            return "person-card-green";
+        }
+        else
+        {
+            return "person-card-blue";
+        }
+    }
+
+    // Format relative time (3h, 2d, 1w2d)
+    private string GetRelativeTime(DateTime lastUpdated)
+    {
+        var now = DateTime.Now;
+        var diff = now - lastUpdated;
+
+        if (diff.TotalDays >= 7)
+        {
+            int weeks = (int)(diff.TotalDays / 7);
+            int days = (int)(diff.TotalDays % 7);
+            return days > 0 ? $"{weeks}w{days}d" : $"{weeks}w";
+        }
+        else if (diff.TotalDays >= 1)
+        {
+            return $"{(int)diff.TotalDays}d";
+        }
+        else if (diff.TotalHours >= 1)
+        {
+            return $"{(int)diff.TotalHours}h";
+        }
+        else
+        {
+            return $"{(int)diff.TotalMinutes}m";
+        }
+    }
+
+    // Select a person to view their list
+    private void SelectPerson(string personName)
+    {
+        listUserId = personName;
+    }
 
     public void claimItem(ItemModel item)
     {
@@ -90,6 +291,7 @@
         allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = UserIdService.userId;
         toastService.ShowSuccess("You claimed " + item.Item + " for " + listUserId + "!");
     }
+
     public void unclaimItem(ItemModel item)
     {
         ListService.UnclaimItem(item.ItemId);

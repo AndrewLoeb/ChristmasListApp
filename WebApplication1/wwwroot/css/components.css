@@ -313,3 +313,187 @@ textarea:focus {
     outline: 2px solid var(--color-secondary);
     outline-offset: 2px;
 }
+
+/* ============================================
+   Family-Based List Review Styles
+   ============================================ */
+
+/* Family Section */
+.family-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.family-header {
+    background: linear-gradient(135deg, #F8E5E5 0%, #F5CFCF 100%);
+    color: #8B3A3A;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.family-header:hover {
+    background: linear-gradient(135deg, #F5CFCF 0%, #F2B8B8 100%);
+    box-shadow: var(--shadow);
+    transform: translateY(-1px);
+}
+
+.family-header .family-name {
+    font-weight: var(--font-weight-bold);
+}
+
+.family-header .person-count {
+    font-size: var(--font-size-sm);
+    opacity: 0.9;
+    margin-left: var(--spacing-xs);
+}
+
+.family-header .chevron {
+    transition: transform var(--transition-base);
+    font-size: var(--font-size-xl);
+}
+
+.family-header .chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.family-people-container {
+    padding: var(--spacing-md) 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+/* Person Selection Cards */
+.person-card {
+    width: 180px;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: 2px solid transparent;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.person-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-secondary);
+}
+
+.person-card.selected {
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px rgba(var(--color-secondary-rgb), 0.2);
+}
+
+.person-card-name {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.person-card-summary {
+    font-size: 0.7rem;
+    display: flex;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.person-card-summary-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Person Card Color States */
+.person-card-grey {
+    background-color: var(--color-gray-300);
+}
+
+.person-card-grey .person-card-name {
+    color: var(--color-gray-700);
+}
+
+.person-card-grey .person-card-summary {
+    color: var(--color-gray-600);
+}
+
+.person-card-blue {
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+}
+
+.person-card-blue .person-card-name {
+    color: #1565C0;
+}
+
+.person-card-blue .person-card-summary {
+    color: #1976D2;
+}
+
+.person-card-green {
+    background: linear-gradient(135deg, var(--color-success-light) 0%, var(--color-success) 100%);
+}
+
+.person-card-green .person-card-name {
+    color: var(--color-white);
+}
+
+.person-card-green .person-card-summary {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* List Review Section */
+.list-review-section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 2px solid var(--border-color);
+}
+
+.list-review-header {
+    background: var(--color-gray-100);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.list-review-header h3 {
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.list-review-stats {
+    display: flex;
+    gap: var(--spacing-lg);
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.list-review-stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.list-review-stat-item span:first-child {
+    font-size: var(--font-size-lg);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    color: var(--text-muted);
+    font-size: var(--font-size-lg);
+}
