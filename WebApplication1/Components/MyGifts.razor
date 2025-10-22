@@ -5,41 +5,181 @@
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
 
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@inject IToastService toastService
+@inject allListsService allListsService
+
 <h2>My Gifts</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th width="100"></th>
-            <th width="150">Elf</th>
-            <th width="350">Item</th>
-            <th width="250">Link</th>
-            <th width="150">Date Claimed</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (ItemModel item in myGifts)
-        {
-            <tr>
-                <td>
-                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                    {
-                        <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
-                    }
-                </td>
-                <td>@item.Name</td>
-                <td>@item.Item</td>
-                <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
-                    @if (!string.IsNullOrWhiteSpace(item.Link))
-                    {
-                        <a href="@item.Link" target="_blank" title="@item.Link">@(item.Link.Length > 35 ? item.Link.Substring(0, 35) + "..." : item.Link)</a>
-                    }
-                </td>
-                <td>@item.DateClaimed</td>
-            </tr>
-        }
-    </tbody>
-</table>
+
+@if (!myGifts.Any())
+{
+    <p class="text-muted">You haven't claimed any gifts yet.</p>
+}
+else
+{
+    <div class="table-responsive-md">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="120">Actions</th>
+                    <th width="100"></th>
+                    <th width="150">Recipient</th>
+                    <th width="350">Item</th>
+                    <th width="250">Link</th>
+                    <th width="150">Date Claimed</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ItemModel item in GetSortedGifts())
+                {
+                    <tr>
+                        <td>
+                            <button type="button" class="btn btn-warning btn-sm" @onclick="() => showUnclaimConfirmation(item)" aria-label="@($"Unclaim {item.Item}")">
+                                <span>↩</span>
+                                <span>Unclaim</span>
+                            </button>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.Item" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+                            }
+                        </td>
+                        <td><strong>@item.Name</strong></td>
+                        <td>@item.Item</td>
+                        <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
+                            @if (!string.IsNullOrWhiteSpace(item.Link))
+                            {
+                                <a href="@item.Link" target="_blank" title="@item.Link">@(item.Link.Length > 35 ? item.Link.Substring(0, 35) + "..." : item.Link)</a>
+                            }
+                        </td>
+                        <td>@FormatDateTime(item.DateClaimed)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Unclaim Confirmation Modal -->
+@if (showUnclaimModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-labelledby="unclaimModalTitle" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="unclaimModalTitle">Confirm Unclaim</h5>
+                    <button type="button" class="btn-close" @onclick="cancelUnclaim" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to unclaim <strong>@itemToUnclaim?.Item</strong> for <strong>@itemToUnclaim?.Name</strong>?</p>
+                    <p class="text-muted">This will release the item so others can claim it. You can claim it again later if it's still available.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="cancelUnclaim" aria-label="Cancel unclaim">Cancel</button>
+                    <button type="button" class="btn btn-warning" @onclick="confirmUnclaim" aria-label="@($"Confirm unclaim {itemToUnclaim?.Item}")">
+                        <span>↩</span>
+                        <span>Unclaim</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-    public dynamic myGifts => ListService.GetAllItems().Where(i => i.Claimer == UserIdService.userId).Where(i => i.Active == 1);
+    private List<ItemModel> _myGifts;
+    public bool showUnclaimModal = false;
+    public ItemModel itemToUnclaim = null;
+
+    public List<ItemModel> myGifts
+    {
+        get
+        {
+            if (_myGifts == null)
+            {
+                try
+                {
+                    _myGifts = ListService.GetAllItems()
+                        .Where(i => i.Claimer == UserIdService.userId)
+                        .Where(i => i.Active == 1)
+                        .ToList();
+                }
+                catch (Exception ex)
+                {
+                    toastService.ShowError($"Error loading your gifts: {ex.Message}");
+                    _myGifts = new List<ItemModel>();
+                }
+            }
+            return _myGifts;
+        }
+    }
+
+    private List<ItemModel> GetSortedGifts()
+    {
+        return myGifts.OrderBy(i => i.Name).ThenBy(i => i.DateClaimed).ToList();
+    }
+
+    private string FormatDateTime(string dateTimeStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateTimeStr))
+            return "";
+
+        if (DateTime.TryParse(dateTimeStr, out DateTime dt))
+        {
+            return dt.ToString("MM/dd/yy h:mm tt");
+        }
+
+        return dateTimeStr; // Return original if parse fails
+    }
+
+    public void showUnclaimConfirmation(ItemModel item)
+    {
+        itemToUnclaim = item;
+        showUnclaimModal = true;
+    }
+
+    public void cancelUnclaim()
+    {
+        showUnclaimModal = false;
+        itemToUnclaim = null;
+    }
+
+    public async Task confirmUnclaim()
+    {
+        if (itemToUnclaim != null)
+        {
+            try
+            {
+                // Unclaim the item
+                ListService.UnclaimItem(itemToUnclaim.ItemId);
+
+                // Refresh all data from Google Sheets (same as List Review)
+                var refreshSuccess = await allListsService.RefreshAllData(ListService);
+
+                if (refreshSuccess)
+                {
+                    toastService.ShowSuccess($"Unclaimed {itemToUnclaim.Item} for {itemToUnclaim.Name}");
+                }
+                else
+                {
+                    toastService.ShowWarning($"Item unclaimed, but failed to refresh data. Please reload the page.");
+                }
+
+                showUnclaimModal = false;
+                itemToUnclaim = null;
+
+                // Refresh local gift list
+                _myGifts = null;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError($"Error unclaiming item: {ex.Message}");
+                showUnclaimModal = false;
+                itemToUnclaim = null;
+            }
+        }
+    }
 }

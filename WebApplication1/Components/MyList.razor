@@ -70,7 +70,7 @@
                     <a href="@item.Link" target="_blank" title="@item.Link">@(item.Link.Length > 30 ? item.Link.Substring(0, 30) + "..." : item.Link)</a>
                 }
             </td>
-            <td>@item.DateUpdated</td>
+            <td>@FormatDateTime(item.DateUpdated)</td>
         </tr>
         }
     }
@@ -459,6 +459,19 @@ else
                 // Refresh the list
                 _myList = null;
             }
+        }
+
+        private string FormatDateTime(string dateTimeStr)
+        {
+            if (string.IsNullOrWhiteSpace(dateTimeStr))
+                return "";
+
+            if (DateTime.TryParse(dateTimeStr, out DateTime dt))
+            {
+                return dt.ToString("MM/dd/yy h:mm tt");
+            }
+
+            return dateTimeStr; // Return original if parse fails
         }
 
     }

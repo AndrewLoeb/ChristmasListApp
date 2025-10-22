@@ -38,7 +38,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [ ] **Item categories/tags** - Organize items by type (books, electronics, etc.)
 - [ ] **Remember Me Functionality** - Allow a user to stay registered across sessions
 - [x] **Personal claim status in List Review** - Implemented family-based List Review with color-coded person cards showing claim status (grey=no items, blue=has items/not claimed, green=claimed by current user)
-- [ ] **Claim Management in My Claimed Gifts page** - Group by family member and unclaim items
+- [x] **Claim Management in My Claimed Gifts page** - Group by family member and unclaim items
 
 ## Won't Do (For Now)
 
