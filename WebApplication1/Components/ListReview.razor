@@ -2,9 +2,11 @@
 @using WebApplication1.Services
 @using WebApplication1.Components
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 @inject googleSheetsListService ListService
 @inject userIdService UserIdService
 @inject allListsService allListsService
+@inject IJSRuntime JSRuntime
 
 @using Blazored.Toast
 @using Blazored.Toast.Services
@@ -22,17 +24,16 @@
 
         <div class="family-section">
             <!-- Family Header -->
-            <div class="family-header" @onclick="() => ToggleFamilyCollapse(familyName)">
+            <div class="family-header @(isCollapsed ? "collapsed" : "")" data-bs-toggle="collapse" data-bs-target="#family-@familyName.Replace(" ", "-")" aria-expanded="@(!isCollapsed).ToString().ToLower()" aria-controls="family-@familyName.Replace(" ", "-")">
                 <div>
                     <span class="family-name">@familyName</span>
                     <span class="person-count">(@people.Count)</span>
                 </div>
-                <span class="chevron @(isCollapsed ? "" : "expanded")">▼</span>
+                <span class="chevron">▼</span>
             </div>
 
             <!-- Person Cards -->
-            @if (!isCollapsed)
-            {
+            <div class="collapse @(isCollapsed ? "" : "show")" id="family-@familyName.Replace(" ", "-")">
                 <div class="family-people-container">
                     @foreach (var person in people)
                     {
@@ -60,7 +61,7 @@
                         </div>
                     }
                 </div>
-            }
+            </div>
         </div>
     }
 </div>
@@ -98,39 +99,54 @@
         <div class="row">
         @foreach (ItemModel item in listUserItems.List)
         {
+            var itemCardClass = GetItemCardClass(item);
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                <div class="card h-100">
-                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                <div class="card h-100 @itemCardClass @(item.Link != "" ? "card-with-link" : "")" id="item-card-@item.ItemId">
+                    @if (item.Link != "")
                     {
-                        <img src="@item.ImageUrl" class="card-img-top" alt="@item.Item" style="max-height: 200px; object-fit: contain; padding: 10px;" />
+                        <div class="external-link-icon">↗</div>
+                        <a href="@item.Link" target="_blank" class="stretched-link"></a>
                     }
-                    <div class="card-body" style="position:relative">
-                        <h6>
-                            @if (item.Link != "")
-                            {<span class="badge badge-info"> Link </span>}
-                            @if (item.Link != "")
-                            {<a href="@item.Link" target="_blank" class="stretched-link"></a>}
-                        </h6>
+                    <div class="card-body">
                         <h5 class="card-title">
                             @item.Item
                         </h5>
                         <p class="card-text">
                             @item.Notes
                         </p>
-
                     </div>
-                    <div class="card-footer">
-                        @if (item.Claimer == UserIdService.userId)
-                        {<div> <button class="btn btn-warning btn-sm" @onclick="() => unclaimItem(item)">Unclaim</button> </div>}
-                        else if (item.Claimer == "")
-                        {<div> <button class="btn btn-success btn-sm" @onclick="() => claimItem(item)">Claim!</button> </div>}
-                        else
-                        {
-                            {<span class="badge badge-primary"> Claimed </span>}
-                        }
-                        <small class="text-muted">
-                            Updated at @item.DateUpdated
-                        </small>
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" class="card-img-bottom" alt="@item.Item" style="max-height: 200px; object-fit: contain; padding: 10px;" />
+                    }
+                    <div class="card-footer item-card-footer">
+                        <div class="item-timestamp">
+                            <span>🕐</span>
+                            <span>@GetItemRelativeTime(item.DateUpdated)</span>
+                        </div>
+                        <div class="item-action">
+                            @if (item.Claimer == UserIdService.userId)
+                            {
+                                <button class="btn btn-unclaim" @onclick="() => unclaimItem(item)">
+                                    <span>↩</span>
+                                    <span>Unclaim</span>
+                                </button>
+                            }
+                            else if (item.Claimer == "")
+                            {
+                                <button class="btn btn-claim" @onclick="() => claimItem(item)">
+                                    <span>🎁</span>
+                                    <span>Claim!</span>
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="item-claimed-badge">
+                                    <span>✓</span>
+                                    <span>Claimed</span>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -253,6 +269,23 @@
         }
     }
 
+    // Get CSS class for item card based on claim status
+    private string GetItemCardClass(ItemModel item)
+    {
+        if (item.Claimer == UserIdService.userId)
+        {
+            return "item-card-claimed-by-me";
+        }
+        else if (string.IsNullOrEmpty(item.Claimer))
+        {
+            return "item-card-unclaimed";
+        }
+        else
+        {
+            return "item-card-claimed-by-other";
+        }
+    }
+
     // Format relative time (3h, 2d, 1w2d)
     private string GetRelativeTime(DateTime lastUpdated)
     {
@@ -279,23 +312,66 @@
         }
     }
 
+    // Format relative time for items (parses string DateUpdated)
+    private string GetItemRelativeTime(string dateUpdatedStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateUpdatedStr))
+        {
+            return "unknown";
+        }
+
+        if (DateTime.TryParse(dateUpdatedStr, out DateTime dateUpdated))
+        {
+            return GetRelativeTime(dateUpdated);
+        }
+        else
+        {
+            // If parsing fails, return the original string
+            return dateUpdatedStr;
+        }
+    }
+
     // Select a person to view their list
     private void SelectPerson(string personName)
     {
         listUserId = personName;
     }
 
-    public void claimItem(ItemModel item)
+    public async Task claimItem(ItemModel item)
     {
+        try
+        {
+            // Trigger claiming animation
+            await JSRuntime.InvokeVoidAsync("triggerClaimAnimation", item.ItemId);
+        }
+        catch (Exception)
+        {
+            // Animation failed, continue anyway
+        }
+
         ListService.ClaimItem(item.ItemId, UserIdService.userId);
         allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = UserIdService.userId;
-        toastService.ShowSuccess("You claimed " + item.Item + " for " + listUserId + "!");
+
+        // Force re-render to update the UI
+        StateHasChanged();
     }
 
-    public void unclaimItem(ItemModel item)
+    public async Task unclaimItem(ItemModel item)
     {
+        try
+        {
+            // Trigger unclaiming animation
+            await JSRuntime.InvokeVoidAsync("triggerUnclaimAnimation", item.ItemId);
+        }
+        catch (Exception)
+        {
+            // Animation failed, continue anyway
+        }
+
         ListService.UnclaimItem(item.ItemId);
         allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = "";
-        toastService.ShowInfo("Unclaimed " + item.Item);
+
+        // Force re-render to update the UI
+        StateHasChanged();
     }
 }
