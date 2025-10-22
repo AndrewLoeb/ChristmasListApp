@@ -19,10 +19,12 @@ namespace WebApplication1.Services
     public class ProductMetadataService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly GoogleImageSearchService _imageSearchService;
 
-        public ProductMetadataService(IHttpClientFactory httpClientFactory)
+        public ProductMetadataService(IHttpClientFactory httpClientFactory, GoogleImageSearchService imageSearchService)
         {
             _httpClientFactory = httpClientFactory;
+            _imageSearchService = imageSearchService;
         }
 
         public async Task<ProductMetadata> FetchMetadataAsync(string url)
@@ -64,6 +66,21 @@ namespace WebApplication1.Services
                 result.Description = GetMetaProperty(doc, "og:description")
                                   ?? GetMetaProperty(doc, "twitter:description")
                                   ?? GetMetaName(doc, "description");
+
+                // Fallback to Google Image Search if no image was found via OpenGraph
+                if (string.IsNullOrWhiteSpace(result.ImageUrl))
+                {
+                    Console.WriteLine("No image found via OpenGraph, trying Google Image Search...");
+                    result.ImageUrl = await _imageSearchService.SearchProductImageAsync(url, result.Title);
+                    if (!string.IsNullOrWhiteSpace(result.ImageUrl))
+                    {
+                        Console.WriteLine($"Image found via Google Image Search: {result.ImageUrl}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("No image found via Google Image Search");
+                    }
+                }
 
                 // Price detection disabled for now - will be enhanced later with Amazon PA-API
                 // result.Price = ExtractPrice(doc);
