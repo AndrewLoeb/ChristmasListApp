@@ -383,6 +383,46 @@ namespace WebApplication1.Services
             var appendReponse = updateRequest.Execute();
         }
 
+        public ItemModel GetItemById(int itemId)
+        {
+            return ExecuteWithRetry(() =>
+            {
+                // Read the specific row for this itemId
+                var range = $"{itemSheet}!A{itemId + 1}:L{itemId + 1}";
+                SpreadsheetsResource.ValuesResource.GetRequest request =
+                        service.Spreadsheets.Values.Get(SpreadsheetId, range);
+                var response = request.Execute();
+                IList<IList<object>> values = response.Values;
+
+                if (values != null && values.Count > 0)
+                {
+                    var row = values[0];
+                    var item = new ItemModel()
+                    {
+                        ItemId = Int32.Parse(row[0].ToString()),
+                        Name = row[1].ToString(),
+                        Item = row[2].ToString(),
+                        Notes = row[3].ToString(),
+                        Link = row[4].ToString(),
+                        DateUpdated = row[5].ToString(),
+                        Claimer = row[6].ToString(),
+                        DateClaimed = row[7].ToString(),
+                        Active = Int32.Parse(row[8].ToString()),
+                        ImageUrl = row.Count > 9 && row[9] != null ? row[9].ToString() : "",
+                        Price = row.Count > 10 && row[10] != null && !string.IsNullOrWhiteSpace(row[10].ToString())
+                            ? decimal.Parse(row[10].ToString())
+                            : (decimal?)null,
+                        MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
+                    };
+                    return item;
+                }
+                else
+                {
+                    throw new Exception($"Item with ID {itemId} not found");
+                }
+            }, $"get item {itemId}");
+        }
+
         public void UpdateInvoice(SpiceModel Spice)
         {
             int rowID = 0;

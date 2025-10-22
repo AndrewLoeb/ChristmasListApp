@@ -12,7 +12,25 @@
 @using Blazored.Toast.Services
 @inject IToastService toastService
 
-<h2>List Review</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">List Review</h2>
+    <div class="d-flex align-items-center gap-3">
+        <small class="text-muted">
+            Last updated: @GetRelativeTime(allListsService.LastRefreshed)
+        </small>
+        <button class="btn btn-sm btn-outline-primary" @onclick="ManualRefresh" disabled="@isRefreshing">
+            @if (isRefreshing)
+            {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <span>Refreshing...</span>
+            }
+            else
+            {
+                <span>🔄 Refresh</span>
+            }
+        </button>
+    </div>
+</div>
 
 <!-- Family-Grouped Person Selection -->
 <div class="family-selection-container">
@@ -160,12 +178,73 @@
     }
 </div>
 
+@implements IDisposable
+
 @code {
     public string listUserId = "";
     private Dictionary<string, bool> collapsedFamilies = new Dictionary<string, bool>();
+    private System.Timers.Timer refreshTimer;
+    private bool isRefreshing = false;
 
     public dynamic listUserNotes => allListsService.userList.FirstOrDefault(u => u.Name == listUserId)?.Notes;
     public dynamic listUserItems => allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId);
+
+    protected override void OnInitialized()
+    {
+        // Setup 5-minute auto-refresh timer
+        refreshTimer = new System.Timers.Timer(300000); // 5 minutes in milliseconds
+        refreshTimer.Elapsed += async (sender, e) => await AutoRefresh();
+        refreshTimer.AutoReset = true;
+        refreshTimer.Start();
+    }
+
+    private async Task AutoRefresh()
+    {
+        try
+        {
+            await allListsService.RefreshAllData(ListService);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Auto-refresh failed: {ex.Message}");
+        }
+    }
+
+    private async Task ManualRefresh()
+    {
+        isRefreshing = true;
+        StateHasChanged();
+
+        try
+        {
+            var success = await allListsService.RefreshAllData(ListService);
+
+            if (success)
+            {
+                toastService.ShowSuccess("Data refreshed successfully");
+            }
+            else
+            {
+                toastService.ShowError("Failed to refresh data");
+            }
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Error refreshing data: {ex.Message}");
+        }
+        finally
+        {
+            isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Stop();
+        refreshTimer?.Dispose();
+    }
 
     // Group all lists by family
     private Dictionary<string, List<ListModel>> GetFamilyGroups()
@@ -341,7 +420,7 @@
     {
         try
         {
-            // Trigger claiming animation
+            // Trigger claiming animation (optimistic UI)
             await JSRuntime.InvokeVoidAsync("triggerClaimAnimation", item.ItemId);
         }
         catch (Exception)
@@ -349,18 +428,53 @@
             // Animation failed, continue anyway
         }
 
-        ListService.ClaimItem(item.ItemId, UserIdService.userId);
-        allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = UserIdService.userId;
+        try
+        {
+            // PRE-FLIGHT CHECK: Read current item state from Google Sheets
+            var currentItem = ListService.GetItemById(item.ItemId);
 
-        // Force re-render to update the UI
-        StateHasChanged();
+            // Check for conflicts: Is the item still unclaimed?
+            if (!string.IsNullOrEmpty(currentItem.Claimer))
+            {
+                // Conflict detected: Someone else claimed it
+                toastService.ShowWarning($"This item was just claimed by {currentItem.Claimer}");
+
+                // Refresh all data to show correct state
+                await allListsService.RefreshAllData(ListService);
+                StateHasChanged();
+                return;
+            }
+
+            // No conflict: Proceed with claim
+            ListService.ClaimItem(item.ItemId, UserIdService.userId);
+
+            // Refresh all data from Google Sheets to get updated counts
+            var refreshSuccess = await allListsService.RefreshAllData(ListService);
+
+            if (!refreshSuccess)
+            {
+                toastService.ShowError("Failed to refresh data. Please try again.");
+            }
+
+            // Force re-render to update the UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Error occurred
+            toastService.ShowError($"Failed to claim item: {ex.Message}");
+
+            // Refresh data to restore correct state
+            await allListsService.RefreshAllData(ListService);
+            StateHasChanged();
+        }
     }
 
     public async Task unclaimItem(ItemModel item)
     {
         try
         {
-            // Trigger unclaiming animation
+            // Trigger unclaiming animation (optimistic UI)
             await JSRuntime.InvokeVoidAsync("triggerUnclaimAnimation", item.ItemId);
         }
         catch (Exception)
@@ -368,10 +482,52 @@
             // Animation failed, continue anyway
         }
 
-        ListService.UnclaimItem(item.ItemId);
-        allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId).List.FirstOrDefault(i => i.ItemId == item.ItemId).Claimer = "";
+        try
+        {
+            // PRE-FLIGHT CHECK: Read current item state from Google Sheets
+            var currentItem = ListService.GetItemById(item.ItemId);
 
-        // Force re-render to update the UI
-        StateHasChanged();
+            // Check for conflicts: Is the item still claimed by current user?
+            if (currentItem.Claimer != UserIdService.userId)
+            {
+                // Conflict detected: Someone else changed the claim status
+                if (string.IsNullOrEmpty(currentItem.Claimer))
+                {
+                    toastService.ShowWarning("This item has already been unclaimed");
+                }
+                else
+                {
+                    toastService.ShowWarning($"This item is now claimed by {currentItem.Claimer}");
+                }
+
+                // Refresh all data to show correct state
+                await allListsService.RefreshAllData(ListService);
+                StateHasChanged();
+                return;
+            }
+
+            // No conflict: Proceed with unclaim
+            ListService.UnclaimItem(item.ItemId);
+
+            // Refresh all data from Google Sheets to get updated counts
+            var refreshSuccess = await allListsService.RefreshAllData(ListService);
+
+            if (!refreshSuccess)
+            {
+                toastService.ShowError("Failed to refresh data. Please try again.");
+            }
+
+            // Force re-render to update the UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Error occurred
+            toastService.ShowError($"Failed to unclaim item: {ex.Message}");
+
+            // Refresh data to restore correct state
+            await allListsService.RefreshAllData(ListService);
+            StateHasChanged();
+        }
     }
 }

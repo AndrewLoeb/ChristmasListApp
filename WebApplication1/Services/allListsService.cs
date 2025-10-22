@@ -11,17 +11,40 @@ namespace WebApplication1.Services
 
         public List<UserModel> userList = new List<UserModel>();
         public List<ListModel> AllLists = new List<ListModel>();
+        public DateTime LastRefreshed { get; private set; }
 
         public allListsService()
         {
-
+            LastRefreshed = DateTime.Now;
         }
 
         public async Task SetAllLists (List<UserModel> userListToSet, List<ListModel> AllListsToSet)
         {
             userList = userListToSet;
             AllLists = AllListsToSet;
+            LastRefreshed = DateTime.Now;
+        }
 
+        public async Task<bool> RefreshAllData(googleSheetsListService listService)
+        {
+            try
+            {
+                // Reload all lists from Google Sheets
+                var refreshedLists = listService.GetAllLists(userList);
+
+                // Update the AllLists property
+                AllLists = refreshedLists;
+
+                // Update timestamp
+                LastRefreshed = DateTime.Now;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error refreshing data: {ex.Message}");
+                return false;
+            }
         }
 
 
