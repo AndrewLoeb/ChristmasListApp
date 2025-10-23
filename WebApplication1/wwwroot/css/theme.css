@@ -92,8 +92,8 @@
     --transition-slow: 350ms ease-in-out;
 
     /* Typography */
-    --font-family-base: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --font-family-display: 'Yellowtail', cursive;
+    --font-family-base: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-family-display: 'Inter', sans-serif;
     --font-family-card: 'Nunito', sans-serif;
 
     --font-size-xs: 0.75rem;

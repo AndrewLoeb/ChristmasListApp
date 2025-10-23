@@ -82,14 +82,13 @@ for details on configuring this project to bundle and minify static web assets. 
 
 a.navbar-brand {
     white-space: normal;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    font-size: var(--font-size-3xl);
-    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
     text-align: center;
     word-break: break-all;
     color: var(--color-white) !important;
-    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
-    letter-spacing: 0.02em;
+    letter-spacing: -0.02em;
 }
 
 /*Backgrounds*/

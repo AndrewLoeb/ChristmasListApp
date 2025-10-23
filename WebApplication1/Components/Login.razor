@@ -77,16 +77,17 @@
 
 @if (showLists)
 {
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Welcome @UserIdService.userId!</h3>
-        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Logout">Logout</button>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="page-nav-group" role="group" aria-label="Page navigation">
+            <button type="button" class="page-nav-btn @(tabIndex == 1 ? "active" : "")" @onclick="Set_MyList">My List</button>
+            <button type="button" class="page-nav-btn @(tabIndex == 2 ? "active" : "")" @onclick="Set_ListReview">List Review</button>
+            <button type="button" class="page-nav-btn @(tabIndex == 3 ? "active" : "")" @onclick="Set_MyGifts">My Gifts</button>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted">@UserIdService.userId</span>
+            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Logout">Logout</button>
+        </div>
     </div>
-    <div class="btn-group btn-group-lg" role="group">
-        <button type="button" class="btn btn-outline-secondary @(tabIndex == 1 ? "active" : "")" @onclick="Set_MyList">My List</button>
-        <button type="button" class="btn btn-outline-secondary @(tabIndex == 2 ? "active" : "")" @onclick="Set_ListReview">List Review</button>
-        <button type="button" class="btn btn-outline-secondary @(tabIndex == 3 ? "active" : "")" @onclick="Set_MyGifts">My Gifts</button>
-    </div>
-    <br />
 
     <div>
         @if (tabIndex == 1)

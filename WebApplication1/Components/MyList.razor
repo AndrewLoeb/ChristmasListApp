@@ -10,7 +10,6 @@
 @using Blazored.Toast.Services
 @inject IToastService toastService
 
-<h2>My List</h2>
 <div class="table-responsive-md">
     <table class="table table-striped" aria-label="My wish list items">
         <thead>
@@ -63,7 +62,7 @@
                 }
             </td>
             <td>@item.Item</td>
-            <td style="word-wrap:break-word; max-width:350px"> @item.Notes </td>
+            <td style="word-wrap:break-word; max-width:350px; white-space:pre-wrap"> @item.Notes </td>
             <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
                 @if (!string.IsNullOrWhiteSpace(item.Link))
                 {
@@ -85,15 +84,15 @@
                 <div class="row g-3 mb-3">
                     <div class="col-12 col-md-6">
                         <label for="newItemName" class="form-label">Item Name</label>
-                        <input id="newItemName" type="text" class="form-control" placeholder="New Item" @bind="newItemItem" onclick="this.select();" maxlength="200" aria-label="New item name" required />
+                        <input id="newItemName" type="text" class="form-control" placeholder="New Item" @bind="newItemItem" @onkeydown="HandleKeyPress" onclick="this.select();" maxlength="200" aria-label="New item name" required />
                     </div>
                     <div class="col-12 col-md-6">
                         <label for="newItemNotes" class="form-label">Notes (Optional)</label>
-                        <input id="newItemNotes" type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" onclick="this.select();" maxlength="500" aria-label="Optional notes for item" />
+                        <input id="newItemNotes" type="text" class="form-control" placeholder="Notes (Optional)" @bind="newItemNotes" @onkeydown="HandleKeyPress" onclick="this.select();" maxlength="500" aria-label="Optional notes for item" />
                     </div>
                     <div class="col-12 col-md-8">
                         <label for="newItemLink" class="form-label">Link (Optional)</label>
-                        <input id="newItemLink" type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" onclick="this.select();" maxlength="2000" aria-label="Optional URL link for item" />
+                        <input id="newItemLink" type="text" class="form-control" placeholder="Link (Optional)" @bind="newItemLink" @onkeydown="HandleKeyPress" onclick="this.select();" maxlength="2000" aria-label="Optional URL link for item" />
                     </div>
                     <div class="col-12 col-md-4 d-flex align-items-end">
                         <button type="button" class="btn btn-success w-100" @onclick="addItem" disabled="@isAddingItem">
@@ -472,6 +471,14 @@ else
             }
 
             return dateTimeStr; // Return original if parse fails
+        }
+
+        private async Task HandleKeyPress(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter" && !isAddingItem)
+            {
+                await addItem();
+            }
         }
 
     }

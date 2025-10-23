@@ -723,3 +723,48 @@ textarea:focus {
 .item-card-unclaiming {
     animation: claimPop 0.4s ease-out;
 }
+
+/* ============================================
+   Page Navigation Buttons
+   ============================================ */
+
+.page-nav-group {
+    display: inline-flex;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    border: 2px solid var(--color-primary);
+}
+
+.page-nav-btn {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    border: none;
+    border-right: 2px solid var(--color-primary);
+    background-color: var(--color-white);
+    color: var(--color-primary);
+    transition: all var(--transition-base);
+    cursor: pointer;
+    position: relative;
+}
+
+.page-nav-btn:last-child {
+    border-right: none;
+}
+
+.page-nav-btn:hover:not(.active) {
+    background-color: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary-dark);
+}
+
+.page-nav-btn.active {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: var(--color-white);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page-nav-btn:focus {
+    outline: none;
+    z-index: 1;
+}
