@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -63,16 +64,39 @@ namespace WebApplication1.Services
                     Console.WriteLine($"Using product title search: {searchQuery}");
                 }
 
-                // Strategy 3: Generic site - extract domain + product name + ID from URL
+                // Strategy 3: Generic site - extract domain + product name + ID + query params from URL
+                // We'll try this with progressive fallback if initial search fails
+                string fallbackDomain = null;
+                string fallbackProductName = null;
+                string fallbackProductId = null;
+                List<string> fallbackQueryParams = null;
+
                 if (searchQuery == null && !string.IsNullOrWhiteSpace(productUrl))
                 {
-                    var (domain, productName, productId) = ExtractDomainAndProduct(productUrl);
+                    var (domain, productName, productId, queryParams) = ExtractDomainAndProduct(productUrl);
                     if (!string.IsNullOrEmpty(domain) && !string.IsNullOrEmpty(productName))
                     {
-                        // Build search query with domain, product name, and ID (if available)
-                        searchQuery = productId != null
-                            ? $"{domain} {productName} item {productId}"
-                            : $"{domain} {productName}";
+                        // Store for potential fallback attempts
+                        fallbackDomain = domain;
+                        fallbackProductName = productName;
+                        fallbackProductId = productId;
+                        fallbackQueryParams = queryParams;
+
+                        // Build search query with domain, product name, ID, and relevant params
+                        var queryParts = new List<string> { domain, productName };
+
+                        if (productId != null)
+                        {
+                            queryParts.Add($"item {productId}");
+                        }
+
+                        // Add query parameters (color, size, sku, etc.)
+                        if (queryParams != null && queryParams.Count > 0)
+                        {
+                            queryParts.AddRange(queryParams);
+                        }
+
+                        searchQuery = string.Join(" ", queryParts);
                         Console.WriteLine($"Using domain + product name search: {searchQuery}");
                     }
                 }
@@ -89,7 +113,48 @@ namespace WebApplication1.Services
                     return null;
                 }
 
-                // Build Google Custom Search API request
+                // Try search with progressive fallback
+                string imageUrl = await TryGoogleImageSearch(searchQuery);
+
+                // If no results and we have fallback data, try simpler queries
+                if (imageUrl == null && fallbackDomain != null && fallbackProductName != null)
+                {
+                    // Fallback 1: Remove query params and product ID, keep domain + product name
+                    var simplifiedQuery = $"{fallbackDomain} {fallbackProductName}";
+                    Console.WriteLine($"Initial search failed. Trying simplified query: {simplifiedQuery}");
+                    imageUrl = await TryGoogleImageSearch(simplifiedQuery);
+
+                    // Fallback 2: Just domain + first 3-4 words of product name
+                    if (imageUrl == null)
+                    {
+                        var words = fallbackProductName.Split(' ');
+                        if (words.Length > 4)
+                        {
+                            var shortenedName = string.Join(" ", words.Take(4));
+                            var shortenedQuery = $"{fallbackDomain} {shortenedName}";
+                            Console.WriteLine($"Simplified search failed. Trying shortened query: {shortenedQuery}");
+                            imageUrl = await TryGoogleImageSearch(shortenedQuery);
+                        }
+                    }
+                }
+
+                return imageUrl;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error searching for product image: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Executes a single Google Image Search query and returns the first image URL.
+        /// Returns null if no results found.
+        /// </summary>
+        private async Task<string> TryGoogleImageSearch(string searchQuery)
+        {
+            try
+            {
                 var requestUrl = $"{GoogleCustomSearchApiUrl}?key={_apiKey}&cx={_searchEngineId}&q={Uri.EscapeDataString(searchQuery)}&searchType=image&num=1";
 
                 var response = await _httpClient.GetAsync(requestUrl);
@@ -104,7 +169,18 @@ namespace WebApplication1.Services
                     var firstItem = items[0];
                     if (firstItem.TryGetProperty("link", out var link))
                     {
-                        return link.GetString();
+                        var imageUrl = link.GetString();
+                        Console.WriteLine($"✓ Found image for query: {searchQuery}");
+                        return imageUrl;
+                    }
+                }
+
+                // No results found
+                if (searchResult.RootElement.TryGetProperty("searchInformation", out var searchInfo))
+                {
+                    if (searchInfo.TryGetProperty("totalResults", out var totalResults))
+                    {
+                        Console.WriteLine($"✗ No results for query (total: {totalResults.GetString()}): {searchQuery}");
                     }
                 }
 
@@ -112,35 +188,99 @@ namespace WebApplication1.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error searching for product image: {ex.Message}");
+                Console.WriteLine($"Error executing Google search for '{searchQuery}': {ex.Message}");
                 return null;
             }
         }
 
         /// <summary>
-        /// Extracts domain, product name, and product ID from a generic e-commerce URL.
+        /// Extracts domain, product name, product ID, and query parameters from a generic e-commerce URL.
         /// Examples:
-        ///   nordstrom.com/s/straw-shoulder-bag/8461451 → ("nordstrom", "straw shoulder bag", "8461451")
-        ///   etsy.com/listing/123456/vintage-ceramic-mug → ("etsy", "vintage ceramic mug", "123456")
-        ///   target.com/p/kitchen-towel-set/-/A-12345 → ("target", "kitchen towel set", "12345")
+        ///   nordstrom.com/s/straw-shoulder-bag/8461451 → ("nordstrom", "straw shoulder bag", "8461451", [])
+        ///   lululemon.com/.../prod11400110?color=71300 → ("lululemon", "pace breaker short...", "prod11400110", ["color 71300"])
+        ///   sephora.com/.../P502185?skuId=2597045 → ("sephora", "triclone skin tech...", "P502185", ["skuid 2597045"])
         /// </summary>
         /// <param name="url">Product URL</param>
-        /// <returns>Tuple of (domain, product name, product ID) or (null, null, null) if extraction fails</returns>
-        private (string domain, string productName, string productId) ExtractDomainAndProduct(string url)
+        /// <returns>Tuple of (domain, product name, product ID, query params) or (null, null, null, null) if extraction fails</returns>
+        private (string domain, string productName, string productId, List<string> queryParams) ExtractDomainAndProduct(string url)
         {
             try
             {
                 var uri = new Uri(url);
 
-                // Extract domain name (e.g., "nordstrom.com" → "nordstrom")
+                // Extract brand name from domain
+                // Examples:
+                //   www.nordstrom.com → "nordstrom"
+                //   shop.lululemon.com → "lululemon"
+                //   m.nike.com → "nike"
+                //   etsy.com → "etsy"
                 var domain = uri.Host;
+
+                // Remove www. prefix
                 if (domain.StartsWith("www."))
                 {
                     domain = domain.Substring(4);
                 }
-                // Get the main domain part (e.g., "nordstrom.com" → "nordstrom")
+
+                // Split by dots and find the brand name
                 var domainParts = domain.Split('.');
-                var mainDomain = domainParts.Length > 0 ? domainParts[0] : domain;
+                string mainDomain;
+
+                if (domainParts.Length >= 2)
+                {
+                    // Get the second-to-last part (brand name before TLD)
+                    // shop.lululemon.com → ["shop", "lululemon", "com"] → "lululemon"
+                    // nordstrom.com → ["nordstrom", "com"] → "nordstrom"
+                    mainDomain = domainParts[domainParts.Length - 2];
+                }
+                else
+                {
+                    // Fallback to first part if unusual structure
+                    mainDomain = domainParts[0];
+                }
+
+                // Extract relevant query parameters (color, size, SKU, etc.)
+                // Whitelist of known product-related parameters (excludes tracking/analytics)
+                var relevantParams = new[] { "color", "colour", "size", "style", "sku", "skuid", "variant", "option" };
+                var queryParams = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(uri.Query))
+                {
+                    var queryString = uri.Query.TrimStart('?');
+                    var parameters = queryString.Split('&');
+
+                    foreach (var param in parameters)
+                    {
+                        var parts = param.Split('=');
+                        if (parts.Length == 2)
+                        {
+                            var key = parts[0].ToLower();
+                            var value = parts[1];
+
+                            // Check if this is a relevant product parameter
+                            if (relevantParams.Contains(key) && !string.IsNullOrWhiteSpace(value))
+                            {
+                                // Decode URL-encoded values and clean up
+                                var decodedValue = Uri.UnescapeDataString(value);
+
+                                // Skip purely numeric values for color/style (they're cryptic codes, not helpful for search)
+                                // Example: color=71300 doesn't help, but color=black does
+                                // SKU/skuId can be numeric (that's useful for product identification)
+                                bool isNumericValue = Regex.IsMatch(decodedValue, @"^\d+$");
+                                bool isIdentifier = key.Contains("sku") || key.Contains("id");
+
+                                if (!isNumericValue || isIdentifier)
+                                {
+                                    queryParams.Add($"{key} {decodedValue}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Skipping numeric {key} parameter: {decodedValue}");
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Extract product name from URL path
                 var path = uri.AbsolutePath;
@@ -155,6 +295,10 @@ namespace WebApplication1.Services
                 var pathSegments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 string productSlug = null;
                 string productId = null;
+
+                // Strategy: Prefer longer, more specific slugs (likely product names)
+                // rather than short category slugs (like "men-shorts")
+                // Also look for product IDs (numeric or patterns like "prod12345")
 
                 for (int i = 0; i < pathSegments.Length; i++)
                 {
@@ -171,38 +315,47 @@ namespace WebApplication1.Services
                         continue;
                     }
 
-                    // Check if this is a numeric ID (likely product ID)
-                    if (Regex.IsMatch(segment, @"^\d+$"))
+                    // Check if this is a product ID pattern (numeric or "prod12345")
+                    if (Regex.IsMatch(segment, @"^\d+$") || Regex.IsMatch(segment, @"^prod\d+", RegexOptions.IgnoreCase))
                     {
-                        // Save as potential product ID
+                        // Save as product ID
                         productId = segment;
                         continue;
                     }
 
-                    // Skip segments that start with special characters or single letters
-                    if (segment.StartsWith("-") || segment.StartsWith("A-"))
+                    // Skip segments that start with special characters or underscores (like "_")
+                    if (segment.StartsWith("-") || segment.StartsWith("_") || segment.StartsWith("A-"))
                     {
                         continue;
                     }
 
-                    // Found a candidate - typically the product slug with dashes
+                    // Found a candidate slug with dashes
                     if (segment.Contains("-") && segment.Length > 3)
                     {
-                        productSlug = segment;
-
-                        // Check if the next segment is a numeric ID
-                        if (i + 1 < pathSegments.Length && Regex.IsMatch(pathSegments[i + 1], @"^\d+$"))
+                        // Prefer longer slugs (product names) over shorter ones (categories)
+                        // E.g., "Pace-Breaker-Short-NF-7-Lined-Update" (38 chars) over "men-shorts" (10 chars)
+                        if (productSlug == null || segment.Length > productSlug.Length)
                         {
-                            productId = pathSegments[i + 1];
+                            productSlug = segment;
                         }
 
-                        break; // Take the first good match
+                        // Check if the next segment is a product ID
+                        if (i + 1 < pathSegments.Length)
+                        {
+                            var nextSegment = pathSegments[i + 1];
+                            if (Regex.IsMatch(nextSegment, @"^\d+$") || Regex.IsMatch(nextSegment, @"^prod\d+", RegexOptions.IgnoreCase))
+                            {
+                                productId = nextSegment;
+                            }
+                        }
+
+                        // Don't break - continue looking for longer/better slugs
                     }
                 }
 
                 if (string.IsNullOrEmpty(productSlug))
                 {
-                    return (null, null, null);
+                    return (null, null, null, null);
                 }
 
                 // Convert slug to readable name: "straw-shoulder-bag" → "straw shoulder bag"
@@ -212,12 +365,12 @@ namespace WebApplication1.Services
                 productName = Regex.Replace(productName, @"[^\w\s]", " ");
                 productName = Regex.Replace(productName, @"\s+", " ").Trim();
 
-                return (mainDomain, productName, productId);
+                return (mainDomain, productName, productId, queryParams);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error extracting domain and product from URL: {ex.Message}");
-                return (null, null, null);
+                return (null, null, null, null);
             }
         }
 

@@ -37,6 +37,8 @@ namespace WebApplication1.Services
                 return result;
             }
 
+            // Try OpenGraph scraping first
+            bool openGraphSuccess = false;
             try
             {
                 Console.WriteLine($"Fetching metadata for URL: {url}");
@@ -48,60 +50,84 @@ namespace WebApplication1.Services
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
                 var response = await httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
 
-                var html = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    var html = await response.Content.ReadAsStringAsync();
 
-                var doc = new HtmlDocument();
-                doc.LoadHtml(html);
+                    var doc = new HtmlDocument();
+                    doc.LoadHtml(html);
 
-                // Try OpenGraph tags first
-                result.ImageUrl = GetMetaProperty(doc, "og:image")
-                               ?? GetMetaProperty(doc, "twitter:image");
+                    // Try OpenGraph tags first
+                    result.ImageUrl = GetMetaProperty(doc, "og:image")
+                                   ?? GetMetaProperty(doc, "twitter:image");
 
-                result.Title = GetMetaProperty(doc, "og:title")
-                            ?? GetMetaProperty(doc, "twitter:title")
-                            ?? doc.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim();
+                    result.Title = GetMetaProperty(doc, "og:title")
+                                ?? GetMetaProperty(doc, "twitter:title")
+                                ?? doc.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim();
 
-                result.Description = GetMetaProperty(doc, "og:description")
-                                  ?? GetMetaProperty(doc, "twitter:description")
-                                  ?? GetMetaName(doc, "description");
+                    result.Description = GetMetaProperty(doc, "og:description")
+                                      ?? GetMetaProperty(doc, "twitter:description")
+                                      ?? GetMetaName(doc, "description");
 
-                // Fallback to Google Image Search if no image was found via OpenGraph
-                if (string.IsNullOrWhiteSpace(result.ImageUrl))
+                    openGraphSuccess = true;
+                    Console.WriteLine($"OpenGraph scraping successful: Title={result.Title}, ImageUrl={result.ImageUrl}");
+                }
+                else
+                {
+                    Console.WriteLine($"OpenGraph scraping failed: HTTP {(int)response.StatusCode} {response.StatusCode}");
+                    result.ErrorMessage = $"HTTP {(int)response.StatusCode}: {response.StatusCode}";
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"OpenGraph scraping failed: {ex.Message}");
+                result.ErrorMessage = $"HTTP error: {ex.Message}";
+            }
+            catch (TaskCanceledException ex)
+            {
+                Console.WriteLine($"OpenGraph scraping timed out");
+                result.ErrorMessage = "Request timed out";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"OpenGraph scraping error: {ex.Message}");
+                result.ErrorMessage = $"Error: {ex.Message}";
+            }
+
+            // Fallback to Google Image Search if no image was found via OpenGraph (or OpenGraph failed)
+            if (string.IsNullOrWhiteSpace(result.ImageUrl))
+            {
+                try
                 {
                     Console.WriteLine("No image found via OpenGraph, trying Google Image Search...");
                     result.ImageUrl = await _imageSearchService.SearchProductImageAsync(url, result.Title);
                     if (!string.IsNullOrWhiteSpace(result.ImageUrl))
                     {
                         Console.WriteLine($"Image found via Google Image Search: {result.ImageUrl}");
+                        result.Success = true; // Mark as successful if we got an image
                     }
                     else
                     {
                         Console.WriteLine("No image found via Google Image Search");
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Google Image Search failed: {ex.Message}");
+                    // Don't overwrite existing error message if OpenGraph also failed
+                    if (string.IsNullOrWhiteSpace(result.ErrorMessage))
+                    {
+                        result.ErrorMessage = $"Image search error: {ex.Message}";
+                    }
+                }
+            }
 
-                // Price detection disabled for now - will be enhanced later with Amazon PA-API
-                // result.Price = ExtractPrice(doc);
-
+            // Mark as successful if we got any useful data
+            if (!string.IsNullOrWhiteSpace(result.ImageUrl) || !string.IsNullOrWhiteSpace(result.Title))
+            {
                 result.Success = true;
                 Console.WriteLine($"Successfully fetched metadata: Title={result.Title}, ImageUrl={result.ImageUrl}");
-            }
-            catch (HttpRequestException ex)
-            {
-                result.ErrorMessage = $"HTTP error: {ex.Message}";
-                Console.WriteLine($"Error fetching metadata: {result.ErrorMessage}");
-            }
-            catch (TaskCanceledException ex)
-            {
-                result.ErrorMessage = "Request timed out";
-                Console.WriteLine($"Error fetching metadata: {result.ErrorMessage}");
-            }
-            catch (Exception ex)
-            {
-                result.ErrorMessage = $"Unexpected error: {ex.Message}";
-                Console.WriteLine($"Error fetching metadata: {result.ErrorMessage}");
             }
 
             return result;
