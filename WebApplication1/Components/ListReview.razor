@@ -31,8 +31,11 @@
     </div>
 </div>
 
-<!-- Family-Grouped Person Selection -->
-<div class="family-selection-container">
+<!-- Two-Column Layout: Person Selector | List Display -->
+<div class="list-review-container">
+    <!-- Left Sidebar: Family-Grouped Person Selection -->
+    <div class="list-review-sidebar">
+        <div class="family-selection-container">
     @foreach (var familyGroup in GetOrderedFamilies())
     {
         var familyName = familyGroup.Key;
@@ -81,17 +84,19 @@
             </div>
         </div>
     }
-</div>
-
-<!-- List Display Section -->
-<div class="list-review-section">
-    @if (string.IsNullOrEmpty(listUserId))
-    {
-        <div class="empty-state">
-            <p>Select a person to view their list</p>
         </div>
-    }
-    else
+    </div>
+
+    <!-- Right Panel: List Display Section -->
+    <div class="list-review-main" id="list-review-main-panel">
+        <div class="list-review-section">
+            @if (string.IsNullOrEmpty(listUserId))
+            {
+                <div class="empty-state">
+                    <p>👈 Select a person from the left to view and claim their gifts</p>
+                </div>
+            }
+            else
     {
         <!-- List Header with Stats -->
         <div class="list-review-header">
@@ -174,7 +179,9 @@
 
         <h3>Notes:</h3>
         <p> @listUserNotes </p>
-    }
+            }
+        </div>
+    </div>
 </div>
 
 @implements IDisposable
@@ -410,9 +417,20 @@
     }
 
     // Select a person to view their list
-    private void SelectPerson(string personName)
+    private async Task SelectPerson(string personName)
     {
         listUserId = personName;
+        StateHasChanged();
+
+        // Auto-scroll the list panel to top when person is selected
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollElementToTop", "list-review-main-panel");
+        }
+        catch
+        {
+            // Silently fail if scroll doesn't work
+        }
     }
 
     public async Task claimItem(ItemModel item)

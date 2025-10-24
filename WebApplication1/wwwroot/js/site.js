@@ -37,3 +37,14 @@ window.triggerUnclaimAnimation = function(itemId) {
         }, 400);
     }
 };
+
+// Scroll element to top (for List Review person selection)
+window.scrollElementToTop = function(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+};
