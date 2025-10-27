@@ -21,10 +21,6 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [x] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns
 
 ## 🔧 Low Priority / Nice to Have
-- [x] **Upgrade Bootstrap 4 → 5** - Remove jQuery dependency, modernize UI
-- [x] **Add loading spinners** - Visual feedback during async operations (Login & MyList components)
-- [x] **Improve accessibility** - Add ARIA labels, keyboard navigation support
-- [x] **UI theme and color enhancement** - Implemented Modern Christmas color scheme (Pine Green, Cranberry Red, Gold) with CSS variables system, modern Bootstrap 5 components, and professional styling
 - [ ] **Manual refresh button for product metadata** - Add icon/button to re-fetch images for individual items
 - [ ] **Admin page for batch product info refresh** - Update all legacy items with missing metadata
 - [ ] **Manual price field** - Let users enter product prices for budget tracking
@@ -36,9 +32,6 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [ ] **Budget tracking** - Sum up prices, show spending totals per person
 - [ ] **Search and filter** - Find items quickly in List Review
 - [ ] **Item categories/tags** - Organize items by type (books, electronics, etc.)
-- [ ] **Remember Me Functionality** - Allow a user to stay registered across sessions
-- [x] **Personal claim status in List Review** - Implemented family-based List Review with color-coded person cards showing claim status (grey=no items, blue=has items/not claimed, green=claimed by current user)
-- [x] **Claim Management in My Claimed Gifts page** - Group by family member and unclaim items
 
 ## Won't Do (For Now)
 
@@ -51,8 +44,54 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 
 ## ✅ Completed
 
-- [x] Document current features and technical debt
-- [x] Create feature requirements reference document
+### Infrastructure & Architecture
+- [x] **Upgrade to .NET 9.0** - Upgraded from .NET 5.0 (commit f6eee88)
+- [x] **Upgrade Bootstrap 4 → 5** - Remove jQuery dependency, modernize UI (commit ebb2f8a)
+- [x] **Remove component inheritance** - Refactor Login/MyList/ListReview/MyGifts to use proper patterns (commit 15c2b8c)
+- [x] **Move Google Sheets credentials** - Extract hardcoded SpreadsheetId to configuration (commit ce3b34a)
+
+### Performance & Error Handling
+- [x] **Bulk load data from backend** - Speed up site by loading all items at once (commit 7e947e8)
+- [x] **Add error handling** - Show user-friendly messages when Google Sheets API fails (commit 7a8f089)
+
+### UX/UI Improvements
+- [x] **Add delete confirmations** - Prevent accidental item deletion (commit 1ea7d76)
+- [x] **Add Cancel buttons** - Allow users to exit edit mode without saving (commit 620e2c0)
+- [x] **Add input validation** - Validate URLs, check for empty item names, character limits (commit 06004b6)
+- [x] **Improve mobile responsiveness** - Fix card-columns layout issues in ListReview (commit d09b571)
+- [x] **Add loading spinners** - Visual feedback during async operations (commit bd1f135)
+- [x] **Improve accessibility** - Add ARIA labels, keyboard navigation support (commit bd1f135)
+- [x] **UI theme and color enhancement** - Modern Christmas color scheme with CSS variables (commit accbed4)
+
+### Product Metadata Features
+- [x] **OpenGraph URL scraping** - Auto-populate item images from product links (commit ee6c781)
+- [x] **Google Custom Search API integration** - Intelligent product image retrieval (commit 87102af)
+- [x] **Display product images across all views** - MyList, ListReview, MyGifts (commit 03dcb43)
+- [x] **Robust error handling for image search** - Progressive fallback for failed scrapes (commit 67cdc43)
+
+### List Review Redesign
+- [x] **Family-based List Review with color-coded cards** - Replace dropdown with person cards (commit d2f49ef)
+- [x] **Item card claiming workflow with animations** - Smooth transitions (commit 7450565)
+- [x] **Robust claim/unclaim with conflict detection** - Data consistency (commit e8f7740)
+- [x] **Side-by-side List Review layout** - Person selector | item display (commit 71fb8ea)
+
+### My Gifts Enhancements
+- [x] **Claim Management in My Claimed Gifts page** - Group by family member and unclaim items (commit 09d4b8c)
+- [x] **DateTime formatting with relative time** - Show "3 weeks ago" etc. (commit 09d4b8c)
+
+### Authentication & Polish
+- [x] **Remember Me Functionality** - Allow user to stay registered across sessions (commit 41e21fa)
+- [x] **Modernize UI with Inter font** - Custom navigation, QOL improvements (commit 68265e7)
+- [x] **QOL improvements** - Consistency and user experience polish (commit 0a7273e)
+
+### Bug Fixes
+- [x] **Fix typo in method name** - `GetAllItmes` → `GetAllItems` (commit 287f0ec)
+
+### Documentation
+- [x] Document current features and technical debt (FEATURES_AND_REQUIREMENTS.md)
+- [x] Create feature requirements reference document (FEATURES_AND_REQUIREMENTS.md)
+- [x] Create agent onboarding documentation (.claude/AGENT_ONBOARDING.md)
+- [x] Create git workflow guide (.claude/git-workflow.md)
 
 ---
 

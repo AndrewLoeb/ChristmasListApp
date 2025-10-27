@@ -28,11 +28,17 @@ This document catalogs all features, user stories, technical requirements, and a
 - Data: Users sheet (ID, Family, Name, Password, Notes)
 - Validation: Client-side password comparison (line 87)
 
+**Recent Improvements:**
+- ✅ "Remember Me" functionality implemented (commit 41e21fa)
+- ✅ LocalStorageService added for persistent login
+- ✅ Auto-focus password field
+- ✅ Bulk data loading at login (90% API call reduction)
+- ✅ Comprehensive error handling with retry logic
+
 **Technical Debt:**
-- Passwords stored in plain text in Google Sheets
-- No password hashing or encryption
+- Passwords stored in plain text in Google Sheets (intentional - family app)
+- No password hashing or encryption (deferred - see "Won't Do" in REFACTOR_BACKLOG.md)
 - No session timeout mechanism
-- No "remember me" functionality
 
 ---
 
@@ -48,11 +54,13 @@ This document catalogs all features, user stories, technical requirements, and a
 - Show only my active items (Active = 1)
 - Items sorted appropriately
 - Links are clickable and open in new tab
+- Product images displayed automatically
 
 **Current Implementation:**
 - Component: `MyList.razor`
 - Service: `googleSheetsListService.GetMyList(userId)`
 - Filter: Active items only
+- Product images: Auto-fetched via ProductMetadataService (commit 03dcb43)
 
 ---
 
@@ -76,11 +84,16 @@ This document catalogs all features, user stories, technical requirements, and a
 - Auto-increment ItemId
 - Auto-set DateUpdated to current timestamp
 
+**Recent Improvements:**
+- ✅ Input validation implemented (commit 06004b6)
+- ✅ URL validation for links
+- ✅ Required field validation
+- ✅ Character limits enforced
+- ✅ Product metadata auto-fetched (OpenGraph + Google Image Search)
+- ✅ Enter key support for all form fields
+
 **Technical Considerations:**
-- No validation for duplicate items
-- No character limit on fields
-- No URL validation for links
-- Manual form clearing (lines 142-144)
+- No validation for duplicate items (intentional - users may want similar items)
 
 ---
 
@@ -104,10 +117,13 @@ This document catalogs all features, user stories, technical requirements, and a
 - Inline editing with conditional rendering (lines 36-45)
 - Uses `editItemId` state to track which item is being edited
 
+**Recent Improvements:**
+- ✅ Cancel button added (commit 620e2c0)
+- ✅ Single-item edit enforcement (editing new item auto-saves previous)
+- ✅ Input validation before save
+
 **Technical Debt:**
-- No "Cancel" button to exit edit mode without saving
-- No validation before save
-- Clicking "Edit" on another item while editing doesn't save previous
+- None - all major issues resolved
 
 ---
 
@@ -128,10 +144,14 @@ This document catalogs all features, user stories, technical requirements, and a
 - Soft delete: Sets Active = 0, doesn't remove from sheet
 - No confirmation dialog
 
+**Recent Improvements:**
+- ✅ Confirmation dialog implemented (commit 1ea7d76)
+- ✅ Prevents accidental deletions
+- ✅ Bootstrap modal for consistency
+
 **Technical Debt:**
-- No confirmation dialog - accidental deletes possible
-- No "undo" functionality
-- Doesn't notify claimer if item was claimed
+- No "undo" functionality (low priority - confirmation is sufficient)
+- Doesn't notify claimer if item was claimed (future: email notifications)
 
 ---
 
@@ -154,10 +174,13 @@ This document catalogs all features, user stories, technical requirements, and a
 - Toggle between view/edit with `editNotesFlag`
 - Textarea 40 cols × 5 rows
 
+**Recent Improvements:**
+- ✅ Cancel button added (commit 620e2c0)
+- ✅ Line breaks preserved with white-space:pre-wrap (commit 68265e7)
+
 **Technical Considerations:**
-- No character limit
-- No rich text formatting
-- No "Cancel" button to discard changes
+- No character limit (intentional - allow lengthy notes)
+- No rich text formatting (keep simple for family use)
 
 ---
 
@@ -169,16 +192,23 @@ This document catalogs all features, user stories, technical requirements, and a
 **So that** I can see what they want
 
 **Acceptance Criteria:**
-- Dropdown shows all family members except myself
-- Shows summary stats in dropdown (e.g., "Name (5 items, 2 claimed)")
-- Selecting a name loads their list immediately
-- Default state prompts "Select Elf..."
+- Display all family members except myself
+- Shows summary stats (items listed, items claimed, time since update)
+- Selecting a person loads their list immediately
+- Color-coded claim status indicators
+- Side-by-side layout (person selector | item display)
 
-**Current Implementation:**
-- Component: `ListReview.razor:24-34`
+**Current Implementation (Major Redesign - commits d2f49ef, 71fb8ea):**
+- Component: `ListReview.razor`
+- Layout: Side-by-side panels (35% selector / 65% list display)
+- Person Cards: Color-coded grid layout
+  - Grey: No items on list
+  - Blue: Has items, none claimed by current user
+  - Green: Has items claimed by current user
+- Metrics: 📝 items listed, 🎁 items claimed by current user, 🕐 time since update
+- Responsive: Side-by-side on desktop/tablet, vertical stack on mobile
 - Data: `allListsService.AllLists`
-- Display: `List.dropDownStr` format
-- Filter: Excludes current user (line 28)
+- Filter: Excludes current user
 
 ---
 
@@ -189,22 +219,29 @@ This document catalogs all features, user stories, technical requirements, and a
 
 **Acceptance Criteria:**
 - Card-based layout for visual appeal
-- Each card shows: Item name, Notes, Link badge, Updated date
+- Each card shows: Product image, Item name, Notes, Link badge, Updated date
 - Link badge clickable to open product page
 - Claim status visible (Unclaimed / Claimed / Claimed by me)
-- Empty list shows no cards
+- Empty list shows helpful guidance message
+- Animations for claim/unclaim actions
 
 **Current Implementation:**
-- Component: `ListReview.razor:41-75`
-- Layout: Bootstrap card-columns (responsive)
-- Stretched link makes entire card clickable if link exists
-- Color-coded badges for links and claim status
+- Component: `ListReview.razor`
+- Layout: Bootstrap card grid (responsive, mobile-optimized)
+- Product Images: Auto-displayed from metadata (commit 03dcb43)
+- Card Footer: Vertical layout (timestamp above action button)
+- Animations: Smooth claim/unclaim transitions (commit 7450565)
+- Empty State: "👈 Select a person from the left to view and claim their gifts"
+
+**Recent Improvements:**
+- ✅ Mobile responsive layout fixed (commit d09b571)
+- ✅ Product images displayed (commits 737ef6d, ee6c781, 87102af)
+- ✅ Claim workflow animations (commit 7450565)
+- ✅ Side-by-side layout optimization (commit 71fb8ea)
 
 **Technical Considerations:**
-- Card columns may not work well on mobile
-- No image preview for products
-- No sorting/filtering options
-- No search functionality
+- No sorting/filtering options (low priority for family use)
+- No search functionality (lists typically small enough to browse)
 
 ---
 
@@ -227,10 +264,14 @@ This document catalogs all features, user stories, technical requirements, and a
 - Updates local state in `allListsService.AllLists` (line 92)
 - Conditional rendering based on `item.Claimer`
 
+**Recent Improvements:**
+- ✅ Conflict detection implemented (commit e8f7740)
+- ✅ Verifies item hasn't been claimed by another user before saving
+- ✅ Error toast if claim conflict detected
+- ✅ Smooth animations for claim actions (commit 7450565)
+
 **Technical Debt:**
-- No claim limit (multiple people can claim if syncing issues)
-- Optimistic UI update could be out of sync with sheets
-- No notification to list owner
+- No notification to list owner (future: email notifications)
 
 ---
 
@@ -252,6 +293,7 @@ This document catalogs all features, user stories, technical requirements, and a
 - Service: `googleSheetsListService.UnclaimItem(itemId)`
 - Updates local state (line 98)
 - Different toast type (ShowInfo vs ShowSuccess)
+- Conflict detection: Verifies still owned by current user (commit e8f7740)
 
 ---
 
@@ -293,12 +335,16 @@ This document catalogs all features, user stories, technical requirements, and a
 - Table format (not cards)
 - Read-only view
 
+**Recent Improvements:**
+- ✅ Typo fixed: `GetAllItmes` → `GetAllItems` (commit 287f0ec)
+- ✅ Grouping by family member implemented (commit 09d4b8c)
+- ✅ Unclaim functionality from this view (commit 09d4b8c)
+- ✅ DateTime formatting with relative time display (commit 09d4b8c)
+- ✅ Product images displayed (commit 03dcb43)
+- ✅ Total count displayed per family member
+
 **Technical Considerations:**
-- No grouping by family member
-- No sorting controls
-- No ability to unclaim from this view
-- No total count displayed
-- Typo in service method: `GetAllItmes` should be `GetAllItems`
+- No sorting controls (grouped by family member is sufficient)
 
 ---
 
@@ -356,18 +402,26 @@ public class ItemModel {
     string DateUpdated // Last modified
     string Claimer     // Who claimed it
     string DateClaimed // When claimed
-    int Active         // Soft delete flag
+    int Active         // Soft delete flag (1=active, 0=deleted)
+
+    // Product metadata (added commit 737ef6d)
+    string ImageUrl           // Product image from OpenGraph/Google Image Search
+    decimal? Price            // Nullable - may not always have price
+    string MetadataFetchedDate // When metadata was last scraped
 }
 ```
 
+**Recent Improvements:**
+- ✅ ImageUrl field added for product images
+- ✅ Price field added (nullable decimal)
+- ✅ MetadataFetchedDate tracks freshness
+
 **Refactor Needs:**
-- Dates should be DateTime, not string
-- Add CreatedDate separate from DateUpdated
-- Add price/budget fields
-- Add category/tags
-- Add image URL
-- Add priority level
-- Consider foreign key pattern for Name/Claimer
+- Dates should be DateTime, not string (deferred - see "Won't Do" in REFACTOR_BACKLOG.md)
+- Add CreatedDate separate from DateUpdated (low priority)
+- Add category/tags (future enhancement)
+- Add priority level (future enhancement)
+- Consider foreign key pattern for Name/Claimer (would require DB migration)
 
 ---
 
@@ -393,10 +447,13 @@ public class ListModel {
 ### TR-003: Service Layer Architecture
 
 **Current Services:**
-- `googleSheetsListService` - Main CRUD operations
-- `googleSheetsSpiceService` - Secondary spreadsheet (legacy?)
+- `googleSheetsListService` - Main CRUD operations, retry logic with exponential backoff
+- `allListsService` - Global state cache (scoped), bulk data loading
 - `userIdService` - Session state (scoped)
-- `allListsService` - Global state cache (scoped)
+- `ProductMetadataService` - OpenGraph scraping, orchestrates image search (commit ee6c781)
+- `GoogleImageSearchService` - Google Custom Search API integration (commit 87102af)
+- `LocalStorageService` - Browser localStorage for "Remember Me" (commit 41e21fa)
+- `googleSheetsSpiceService` - Secondary spreadsheet (legacy, appears unused)
 
 **Refactor Strategy:**
 1. **Repository Pattern**
@@ -418,24 +475,21 @@ public class ListModel {
 
 ### TR-004: Component Architecture
 
-**Current Pattern:**
+**Previous Pattern (Removed):**
 - `Login.razor` - Base component with state
-- `MyList.razor` - Inherits Login
-- `ListReview.razor` - Inherits Login
-- `MyGifts.razor` - Inherits Login
+- `MyList.razor` - Inherited Login
+- `ListReview.razor` - Inherited Login
+- `MyGifts.razor` - Inherited Login
 
-**Problems:**
-- Component inheritance is antipattern
-- Tight coupling between components
-- Shared state via inheritance
-- Violates single responsibility
+**Current Pattern (Refactored - commit 15c2b8c):**
+- ✅ Component inheritance removed
+- ✅ Shared state via service injection (`userIdService`, `allListsService`)
+- ✅ Independent, reusable components
+- ✅ Separation of concerns maintained
 
-**Refactor Strategy:**
-1. Remove inheritance
-2. Use cascading parameters for user context
-3. Create layout component for authenticated views
-4. Separate concerns: Auth / Navigation / Content
-5. Implement proper routing
+**Future Considerations:**
+- Cascading parameters for user context (optional improvement)
+- AuthenticationStateProvider pattern (optional for enterprise patterns)
 
 ---
 
@@ -450,38 +504,46 @@ public class ListModel {
 - Google Sheets credentials in codebase
 - No audit logging
 
-**Refactor Priorities:**
-1. **HIGH**: Hash passwords (bcrypt, Argon2)
-2. **HIGH**: Move credentials to secure config (Azure Key Vault, AWS Secrets)
-3. **HIGH**: Input validation and sanitization
-4. **MEDIUM**: Add HTTPS redirect
-5. **MEDIUM**: CSRF tokens for forms
-6. **MEDIUM**: Rate limiting
-7. **LOW**: Two-factor authentication
-8. **LOW**: Password reset flow
+**Recent Improvements:**
+- ✅ Credentials moved to configuration (commit ce3b34a)
+- ✅ Input validation and sanitization implemented (commit 06004b6)
+
+**Refactor Priorities (Updated):**
+1. **DEFERRED**: Hash passwords - Intentional decision for family app (see REFACTOR_BACKLOG.md "Won't Do")
+2. **MEDIUM**: Add HTTPS redirect
+3. **MEDIUM**: CSRF tokens for forms
+4. **MEDIUM**: Rate limiting on login
+5. **LOW**: Two-factor authentication
+6. **LOW**: Password reset flow
+7. **LOW**: Azure Key Vault / AWS Secrets (currently environment variables sufficient)
 
 ---
 
 ### TR-006: UI/UX Requirements
 
 **Current Implementation:**
-- Bootstrap 4.x
-- jQuery
-- Font Awesome icons
+- Bootstrap 5 (jQuery removed - commit ebb2f8a)
+- Inter Bold font (modern sans-serif)
+- Modern Christmas theme (Pine Green, Cranberry Red, Gold - commit accbed4)
+- CSS variables system for theming
 - Blazored.Toast for notifications
 - Responsive tables and cards
+- Custom component styling (components.css)
 
-**Refactor Opportunities:**
-1. **Upgrade Bootstrap** to v5 (remove jQuery dependency)
-2. **Add loading states** for async operations
-3. **Improve mobile responsiveness**
-   - Card columns problematic on mobile
-   - Table overflow issues
-4. **Add confirmation dialogs** for destructive actions
-5. **Implement dark mode**
-6. **Add keyboard navigation**
-7. **Improve accessibility** (ARIA labels, screen reader support)
-8. **Add animations** for better UX
+**Recent Improvements:**
+- ✅ Upgraded Bootstrap 4 → 5, removed jQuery (commit ebb2f8a)
+- ✅ Loading spinners for async operations (commit bd1f135)
+- ✅ Mobile responsiveness improved (commits d09b571, 71fb8ea)
+- ✅ Confirmation dialogs for destructive actions (commit 1ea7d76)
+- ✅ Accessibility improvements: ARIA labels, keyboard navigation (commit bd1f135)
+- ✅ Animations for claim/unclaim actions (commit 7450565)
+- ✅ Modern Christmas theme with CSS variables (commit accbed4)
+- ✅ Custom navigation with themed buttons (commit 68265e7)
+- ✅ Enter key support for forms (commit 68265e7)
+
+**Future Opportunities:**
+- Dark mode toggle (deferred - current theme is well-established)
+- Enhanced keyboard shortcuts (low priority)
 
 ---
 
@@ -506,19 +568,22 @@ public class ListModel {
 ### TR-008: Error Handling
 
 **Current State:**
-- Minimal error handling
-- Console logging only
-- No user-facing error messages for API failures
-- No retry logic
-- No offline support
+- ✅ Comprehensive error handling implemented (commit 7a8f089)
+- ✅ User-friendly toast notifications for errors
+- ✅ Retry logic with exponential backoff (Google Sheets API)
+- ✅ Graceful degradation (OpenGraph failures don't block image search)
+- Console logging for debugging
 
-**Requirements:**
-1. Global exception handler
-2. User-friendly error messages
-3. Retry with exponential backoff
-4. Offline detection and queuing
-5. Error logging service (Application Insights, Sentry)
-6. Graceful degradation
+**Recent Improvements:**
+- ✅ Retry logic with exponential backoff (commit 7a8f089)
+- ✅ User-friendly error messages via toasts (commit 7a8f089)
+- ✅ Graceful degradation for metadata scraping (commit 67cdc43)
+- ✅ Conflict detection for claims/unclaims (commit e8f7740)
+
+**Future Requirements:**
+- Global exception handler (low priority - current approach works well)
+- Offline detection and queuing (low priority for online-only app)
+- Error logging service like Application Insights or Sentry (optional)
 
 ---
 
@@ -554,21 +619,22 @@ public class ListModel {
 
 ### TR-010: Performance Optimization
 
-**Current Issues:**
-- Full data fetch on every component load
-- No pagination
-- No lazy loading
-- Repeated API calls
-- No compression
+**Previous Issues (Resolved):**
+- ~~Full data fetch on every component load~~ → ✅ Bulk loading at login (commit 7e947e8)
+- ~~Repeated API calls~~ → ✅ 90% reduction via allListsService caching
+
+**Current State:**
+- ✅ Bulk data loading (commit 7e947e8)
+- ✅ allListsService caching (scoped, one fetch per session)
+- ✅ Optimistic UI updates (immediate feedback)
+- ✅ Conflict detection prevents stale data issues
 
 **Optimization Opportunities:**
-1. Implement caching strategy (Redis, MemoryCache)
-2. Add pagination for large lists
-3. Lazy load images/links
-4. Reduce API calls with batching
-5. Enable response compression
-6. Add CDN for static assets
-7. Implement service worker for offline
+1. Add pagination for large lists (low priority - family lists rarely exceed 50 items)
+2. Lazy load images (low priority - product images are optimized)
+3. Enable response compression (optional)
+4. Add CDN for static assets (optional for family app)
+5. Implement service worker for offline (low priority - online-only app)
 
 ---
 
@@ -712,19 +778,18 @@ As a user, I want to share my wishlist with non-family via link, so friends can 
 
 ## Technical Debt Items
 
-### High Priority
-1. **Password security** - Plain text storage (Lines: Login.razor:87)
-2. **Component inheritance** - Antipattern in Blazor
-3. **Error handling** - No global handler or user feedback
-4. **No tests** - Zero test coverage
-5. **Typo in method name** - `GetAllItmes` in MyGifts.razor:34
+### High Priority (Resolved)
+1. ✅ **Component inheritance** - Removed (commit 15c2b8c)
+2. ✅ **Error handling** - Comprehensive error handling with retry logic (commit 7a8f089)
+3. ✅ **Typo in method name** - Fixed `GetAllItmes` → `GetAllItems` (commit 287f0ec)
+4. **Password security** - Plain text storage (intentional - see REFACTOR_BACKLOG.md "Won't Do")
+5. **No tests** - Zero test coverage (acknowledged - manual testing sufficient for family app)
 
-### Medium Priority
-1. **No confirmation dialogs** - Deletes are immediate
-2. **Optimistic UI updates** - Can desync with backend
-3. **No input validation** - URLs, character limits
-4. **Manual state management** - Error-prone
-5. **Hard-coded credentials** - SpreadsheetId in code
+### Medium Priority (Resolved)
+1. ✅ **Confirmation dialogs** - Implemented (commit 1ea7d76)
+2. ✅ **Input validation** - Comprehensive validation (commit 06004b6)
+3. ✅ **Hard-coded credentials** - Moved to configuration (commit ce3b34a)
+4. ✅ **Optimistic UI updates with conflict detection** - Implemented (commit e8f7740)
 
 ### Low Priority
 1. **No pagination** - Could be slow with many items
@@ -737,14 +802,14 @@ As a user, I want to share my wishlist with non-family via link, so friends can 
 
 ## Code Quality Metrics
 
-### Current State
-- **Lines of Code**: ~2000 (estimated)
+### Current State (Updated 2025-10-27)
+- **Lines of Code**: ~3500 (estimated, includes CSS/JS)
 - **Test Coverage**: 0%
 - **Components**: 5 Razor components
-- **Services**: 4 services
-- **Models**: 4 models
-- **Dependencies**: 10+ NuGet packages
-- **Technical Debt Ratio**: High (estimated 30%+)
+- **Services**: 7 services (added ProductMetadataService, GoogleImageSearchService, LocalStorageService)
+- **Models**: 4 models (ItemModel enhanced with metadata fields)
+- **Dependencies**: 12+ NuGet packages
+- **Technical Debt Ratio**: Low (estimated 5-10%, most major issues resolved)
 
 ### Target State
 - **Test Coverage**: >80%
@@ -758,6 +823,7 @@ As a user, I want to share my wishlist with non-family via link, so friends can 
 ## Notes
 - Original copyright 2021 by AndrewLoeb
 - MIT License
-- Targeting .NET 9.0
+- Targeting .NET 9.0 (upgraded from .NET 5.0 - commit f6eee88)
 - Active development since 2021
-- Last major update: 2024 (commit 6348687)
+- Last major refactor session: 2025-10-27 (28 commits, comprehensive modernization)
+- **Most Recent Improvements**: Side-by-side List Review layout, Google Custom Search integration, "Remember Me" functionality, Modern Christmas theme
