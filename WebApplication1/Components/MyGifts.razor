@@ -12,7 +12,9 @@
 
 @if (!myGifts.Any())
 {
-    <p class="text-muted">You haven't claimed any gifts yet.</p>
+    <div class="empty-state">
+        <p>🎁 You haven't claimed any gifts yet. Head to <strong>List Review</strong> to find gifts to claim!</p>
+    </div>
 }
 else
 {
@@ -33,7 +35,7 @@ else
                 {
                     <tr>
                         <td>
-                            <button type="button" class="btn btn-warning btn-sm" @onclick="() => showUnclaimConfirmation(item)" aria-label="@($"Unclaim {item.Item}")">
+                            <button type="button" class="btn btn-unclaim btn-sm" @onclick="() => showUnclaimConfirmation(item)" aria-label="@($"Unclaim {item.Item}")">
                                 <span>↩</span>
                                 <span>Unclaim</span>
                             </button>

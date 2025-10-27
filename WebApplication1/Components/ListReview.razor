@@ -75,7 +75,7 @@
                                 </div>
                                 <div class="person-card-summary-item">
                                     <span>🕐</span>
-                                    <span>@GetRelativeTime(person.lastUpdated)</span>
+                                    <span>@GetRelativeTime(person.lastUpdated, person.itemsListed)</span>
                                 </div>
                             </div>
                         </div>
@@ -177,7 +177,7 @@
 
         <hr />
 
-        <h3>Notes:</h3>
+        <h3 class="mb-3">Notes:</h3>
         <p> @listUserNotes </p>
             }
         </div>
@@ -372,8 +372,14 @@
     }
 
     // Format relative time (3h, 2d, 1w2d)
-    private string GetRelativeTime(DateTime lastUpdated)
+    private string GetRelativeTime(DateTime lastUpdated, int itemsListed = -1)
     {
+        // If user has no items, show placeholder
+        if (itemsListed == 0)
+        {
+            return "--";
+        }
+
         var now = DateTime.Now;
         var diff = now - lastUpdated;
 

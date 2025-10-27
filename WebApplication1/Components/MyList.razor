@@ -79,7 +79,7 @@
     <br />
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10 col-xl-8">
-            <h3 id="add-item-heading">Add Item</h3>
+            <h3 id="add-item-heading" class="mb-3">Add Item</h3>
             <form aria-labelledby="add-item-heading">
                 <div class="row g-3 mb-3">
                     <div class="col-12 col-md-6">
@@ -113,7 +113,7 @@
     </div>
 
     <hr />
-    <h3 id="notes-heading">Notes to Share:</h3>
+    <h3 id="notes-heading" class="mb-3">Notes to Share:</h3>
     @if (editNotesFlag == 0)
 {
     <p aria-label="Your shared notes"> @myNotes </p>
@@ -124,7 +124,7 @@ else
     <textarea class="form-control" cols="40" rows="5" @bind="newNotes" maxlength="500" aria-label="Edit shared notes" aria-describedby="notes-heading"></textarea>
     <div class="mt-2">
         <button type="button" class="btn btn-success" @onclick="submitEditNotes" aria-label="Save notes changes">Save Notes</button>
-        <button type="button" class="btn btn-secondary ml-2" @onclick="cancelEditNotes" aria-label="Cancel notes editing">Cancel</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="cancelEditNotes" aria-label="Cancel notes editing">Cancel</button>
     </div>
 }
 
