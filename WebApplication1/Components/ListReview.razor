@@ -112,18 +112,17 @@
                 </div>
                 <div class="list-review-stat-item">
                     <span>🕐</span>
-                    <span>Updated @GetRelativeTime(listUserItems.lastUpdated)</span>
+                    <span>@(listUserItems.itemsListed == 0 ? "No updates" : $"Updated {GetRelativeTime(listUserItems.lastUpdated, listUserItems.itemsListed)}")</span>
                 </div>
             </div>
         </div>
 
-        <!-- Item Cards Grid -->
-        <div class="row">
+        <!-- Item Cards Masonry -->
+        <div class="item-cards-masonry">
         @foreach (ItemModel item in listUserItems.List)
         {
             var itemCardClass = GetItemCardClass(item);
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                <div class="card h-100 @itemCardClass @(item.Link != "" ? "card-with-link" : "")" id="item-card-@item.ItemId">
+                <div class="card mb-3 @itemCardClass @(item.Link != "" ? "card-with-link" : "")" id="item-card-@item.ItemId">
                     @if (item.Link != "")
                     {
                         <div class="external-link-icon">↗</div>
@@ -139,7 +138,7 @@
                     </div>
                     @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                     {
-                        <img src="@item.ImageUrl" class="card-img-bottom" alt="@item.Item" style="max-height: 200px; object-fit: contain; padding: 10px;" />
+                        <img src="@item.ImageUrl" class="card-img-bottom" alt="@item.Item" style="max-height: 140px; object-fit: contain; padding: 10px;" />
                     }
                     <div class="card-footer item-card-footer">
                         <div class="item-timestamp">
@@ -171,7 +170,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
         }
         </div>
 
