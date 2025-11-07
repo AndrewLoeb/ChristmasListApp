@@ -116,7 +116,14 @@
     <h3 id="notes-heading" class="mb-3">Notes to Share:</h3>
     @if (editNotesFlag == 0)
 {
-    <p aria-label="Your shared notes"> @myNotes </p>
+    @if (string.IsNullOrWhiteSpace(myNotes) || myNotes.Trim() == "Notes")
+    {
+        <p class="text-muted fst-italic" aria-label="Your shared notes">Click 'Edit Notes' to add notes that your family can see</p>
+    }
+    else
+    {
+        <p aria-label="Your shared notes"> @myNotes </p>
+    }
     <button type="button" class="btn btn-secondary" @onclick="editNotes" aria-label="Edit your shared notes">Edit Notes</button>
 }
 else

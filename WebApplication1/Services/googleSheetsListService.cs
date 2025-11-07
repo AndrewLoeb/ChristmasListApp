@@ -109,7 +109,7 @@ namespace WebApplication1.Services
                             Family = row[1].ToString(),
                             Name = row[2].ToString(),
                             Password = row[3].ToString(),
-                            Notes = row[4].ToString(),
+                            Notes = row.Count > 4 && row[4] != null ? row[4].ToString() : "",
                         };
 
                         myUserList.Add(myInv);
