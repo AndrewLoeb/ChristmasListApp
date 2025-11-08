@@ -14,10 +14,10 @@ namespace WebApplication1.Services
 
         }
 
-        public async Task SetUser(string userIdToSet)
+        public Task SetUser(string userIdToSet)
         {
             userId = userIdToSet;
-
+            return Task.CompletedTask;
         }
 
 

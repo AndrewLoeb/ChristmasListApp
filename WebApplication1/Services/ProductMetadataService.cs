@@ -38,7 +38,6 @@ namespace WebApplication1.Services
             }
 
             // Try OpenGraph scraping first
-            bool openGraphSuccess = false;
             try
             {
                 Console.WriteLine($"Fetching metadata for URL: {url}");
@@ -70,7 +69,6 @@ namespace WebApplication1.Services
                                       ?? GetMetaProperty(doc, "twitter:description")
                                       ?? GetMetaName(doc, "description");
 
-                    openGraphSuccess = true;
                     Console.WriteLine($"OpenGraph scraping successful: Title={result.Title}, ImageUrl={result.ImageUrl}");
                 }
                 else
@@ -84,7 +82,7 @@ namespace WebApplication1.Services
                 Console.WriteLine($"OpenGraph scraping failed: {ex.Message}");
                 result.ErrorMessage = $"HTTP error: {ex.Message}";
             }
-            catch (TaskCanceledException ex)
+            catch (TaskCanceledException)
             {
                 Console.WriteLine($"OpenGraph scraping timed out");
                 result.ErrorMessage = "Request timed out";

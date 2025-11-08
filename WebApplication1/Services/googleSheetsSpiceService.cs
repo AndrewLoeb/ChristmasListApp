@@ -94,8 +94,7 @@ namespace WebApplication1.Services
             // Specifying Column Range for reading...
             var range = $"{logSheet}!A:B";
             var valueRange = new ValueRange();
-            int mynewID = 1;
-            
+
             //var myInvList = Spices_GetList();
 
             var oblist = new List<object>() {Name, DateTime.Now};

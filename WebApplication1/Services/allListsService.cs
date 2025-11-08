@@ -18,14 +18,15 @@ namespace WebApplication1.Services
             LastRefreshed = DateTime.Now;
         }
 
-        public async Task SetAllLists (List<UserModel> userListToSet, List<ListModel> AllListsToSet)
+        public Task SetAllLists (List<UserModel> userListToSet, List<ListModel> AllListsToSet)
         {
             userList = userListToSet;
             AllLists = AllListsToSet;
             LastRefreshed = DateTime.Now;
+            return Task.CompletedTask;
         }
 
-        public async Task<bool> RefreshAllData(googleSheetsListService listService)
+        public Task<bool> RefreshAllData(googleSheetsListService listService)
         {
             try
             {
@@ -38,12 +39,12 @@ namespace WebApplication1.Services
                 // Update timestamp
                 LastRefreshed = DateTime.Now;
 
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error refreshing data: {ex.Message}");
-                return false;
+                return Task.FromResult(false);
             }
         }
 

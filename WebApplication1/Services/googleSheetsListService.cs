@@ -290,7 +290,6 @@ namespace WebApplication1.Services
             // Specifying Column Range for reading...
             var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
             var valueRange = new ValueRange();
-            int mynewID = 1;
 
             //var myInvList = Spices_GetList();
             List<ItemModel> AllLists = GetAllItems();
