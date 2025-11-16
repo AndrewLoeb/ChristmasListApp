@@ -315,6 +315,46 @@ This document catalogs all features, user stories, technical requirements, and a
 
 ---
 
+#### US-011.5: Christmas Activity Timeline
+**As a** visitor or logged-in user
+**I want to** see a visual timeline of item creation and claim activity
+**So that** I can track engagement and countdown to Christmas
+
+**Acceptance Criteria:**
+- Display activity chart on login page
+- Show timeline from October 1 to December 25
+- Two overlaid area charts: items created (blue) and items claimed (green)
+- Vertical markers for key dates: Today (black), Thanksgiving (gold), Black Friday (gray shading), Christmas (red)
+- Countdown badge showing days until Christmas
+- Responsive design for desktop and mobile
+- Auto-updates when data refreshes
+
+**Current Implementation:**
+- Component: `ChristmasActivityChart.razor`
+- Library: Chart.js v4.4.1 with annotation plugin
+- JavaScript: `site.js:initChristmasActivityChart()`
+- Colors: Winter light blue (#87CEEB) for created items, pine green for claimed items
+- Holiday markers: Thanksgiving (Nov 27), Black Friday, Christmas (Dec 25), Today
+- Data aggregation: Daily counts from October 1 to December 25
+- Positioning: Bottom of login page, above login form
+
+**Technical Details:**
+- Chart.js UMD module loaded via CDN
+- Theme-aware colors using CSS variables
+- Smooth area charts with 0.4 tension
+- Responsive aspect ratio (3:1)
+- Holiday date calculation (4th Thursday of November for Thanksgiving)
+- Canvas-based rendering for performance
+
+**Recent Improvements:**
+- ✅ Created modular reusable component
+- ✅ Integrated Chart.js with Blazor JSInterop
+- ✅ Added holiday markers (Thanksgiving, Black Friday, Christmas)
+- ✅ Color coordination with existing theme
+- ✅ Optimized data loading to prevent redundant API calls
+
+---
+
 ### My Gifts Tab (Claim Tracking)
 
 #### US-012: View My Claimed Gifts
@@ -622,10 +662,15 @@ public class ListModel {
 **Previous Issues (Resolved):**
 - ~~Full data fetch on every component load~~ → ✅ Bulk loading at login (commit 7e947e8)
 - ~~Repeated API calls~~ → ✅ 90% reduction via allListsService caching
+- ~~Lazy-loaded properties causing multiple API calls~~ → ✅ Eager loading in OnInitializedAsync
+- ~~ServerPrerendered causing double initialization~~ → ✅ Changed to Server render mode
+- ~~Index.cshtml.cs redundant data load~~ → ✅ Removed, handled by Login component
 
 **Current State:**
 - ✅ Bulk data loading (commit 7e947e8)
 - ✅ allListsService caching (scoped, one fetch per session)
+- ✅ Single render initialization (Server mode vs ServerPrerendered)
+- ✅ Eliminated redundant data loads (2 API calls total on page load, down from 14+)
 - ✅ Optimistic UI updates (immediate feedback)
 - ✅ Conflict detection prevents stale data issues
 

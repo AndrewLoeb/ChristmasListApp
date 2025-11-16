@@ -23,8 +23,6 @@
 {
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
-            <h3 class="mb-4">Login</h3>
-
             <form @onsubmit="Set_ShowLists">
                 <div class="mb-3">
                     <label for="userSelect" class="form-label">Select Elf</label>
@@ -58,7 +56,7 @@
                         }
                         else
                         {
-                            <span>Activate!</span>
+                            <span>Sign In</span>
                         }
                     </button>
                 </div>
@@ -69,6 +67,12 @@
                 <div class="alert alert-info mt-3">
                     @LoadingMessage
                 </div>
+            }
+
+            @* Display Christmas Activity Chart below login form *@
+            @if (AllLists != null && AllLists.Any())
+            {
+                <ChristmasActivityChart AllLists="@AllLists" />
             }
         </div>
     </div>
@@ -117,51 +121,9 @@
     public bool rememberMe = false;
 
     private ElementReference passwordInput;
-    private List<UserModel> _userList;
-    private List<ListModel> _allLists;
-
-    public List<UserModel> userList
-    {
-        get
-        {
-            if (_userList == null)
-            {
-                try
-                {
-                    _userList = ListService.Users_GetList();
-                }
-                catch (Exception ex)
-                {
-                    toastService.ShowError($"Error loading users: {ex.Message}");
-                    LoadingMessage = "Error loading data. Please try again.";
-                    _userList = new List<UserModel>(); // Return empty list to prevent further errors
-                }
-            }
-            return _userList;
-        }
-    }
-
-    public List<ListModel> AllLists
-    {
-        get
-        {
-            if (_allLists == null)
-            {
-                try
-                {
-                    _allLists = ListService.GetAllLists(userList);
-                }
-                catch (Exception ex)
-                {
-                    toastService.ShowError($"Error loading lists: {ex.Message}");
-                    LoadingMessage = "Error loading data. Please try again.";
-                    _allLists = new List<ListModel>(); // Return empty list to prevent further errors
-                }
-            }
-            return _allLists;
-        }
-    }
-
+    private List<UserModel> userList = new List<UserModel>();
+    private List<ListModel> AllLists = new List<ListModel>();
+    private bool dataLoaded = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -171,6 +133,24 @@
         {
             userId = savedUsername;
             rememberMe = true; // Check the "Remember me" box since we loaded a saved username
+        }
+
+        // Load data once on initialization to avoid redundant API calls
+        if (!dataLoaded)
+        {
+            try
+            {
+                userList = ListService.Users_GetList();
+                AllLists = ListService.GetAllLists(userList);
+                dataLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError($"Error loading data: {ex.Message}");
+                LoadingMessage = "Error loading data. Please try again.";
+                userList = new List<UserModel>();
+                AllLists = new List<ListModel>();
+            }
         }
     }
 

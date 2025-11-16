@@ -25,7 +25,8 @@ namespace WebApplication1.Pages
         public bool showLists { get; set; }
         public void OnGet()
         {
-            Users = ListService.Users_GetList();
+            // Data loading is handled by the Login component
+            // Removed Users_GetList() call to avoid redundant API calls
             showLists = false;
         }
 

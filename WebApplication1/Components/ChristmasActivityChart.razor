@@ -1,0 +1,289 @@
+@using WebApplication1.Models
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<div class="christmas-activity-chart-container">
+    <div class="chart-header">
+        <h5 class="chart-title">Activity Timeline</h5>
+        <div class="countdown-badge">
+            @if (daysUntilChristmas > 0)
+            {
+                <span class="countdown-icon">🎄</span>
+                <span class="countdown-text">@daysUntilChristmas days until Christmas</span>
+            }
+            else if (daysUntilChristmas == 0)
+            {
+                <span class="countdown-icon">🎅</span>
+                <span class="countdown-text">Merry Christmas!</span>
+            }
+            else
+            {
+                <span class="countdown-icon">🎁</span>
+                <span class="countdown-text">Happy Holidays!</span>
+            }
+        </div>
+    </div>
+    <div class="chart-canvas-wrapper">
+        <canvas id="@canvasId"></canvas>
+    </div>
+</div>
+
+<style>
+    .christmas-activity-chart-container {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .chart-title {
+        margin: 0;
+        font-family: var(--font-family-display);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-primary);
+        font-size: var(--font-size-xl);
+    }
+
+    .countdown-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+        color: white;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-family-base);
+        font-weight: var(--font-weight-semibold);
+        font-size: var(--font-size-sm);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .countdown-icon {
+        font-size: var(--font-size-lg);
+    }
+
+    .countdown-text {
+        white-space: nowrap;
+    }
+
+    .chart-canvas-wrapper {
+        position: relative;
+        width: 100%;
+        min-height: 200px;
+    }
+
+    @@media (max-width: 768px) {
+        .christmas-activity-chart-container {
+            padding: 1rem;
+        }
+
+        .chart-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .countdown-badge {
+            font-size: var(--font-size-xs);
+            padding: 0.375rem 0.75rem;
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<ListModel> AllLists { get; set; }
+
+    private string canvasId = $"christmas-chart-{Guid.NewGuid():N}";
+    private int daysUntilChristmas;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AllLists != null && AllLists.Any())
+        {
+            // Add a small delay to ensure Chart.js is fully loaded
+            await Task.Delay(100);
+            await InitializeChart();
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        CalculateCountdown();
+    }
+
+    private void CalculateCountdown()
+    {
+        var today = DateTime.Today;
+        var christmas = new DateTime(today.Year, 12, 25);
+
+        // If Christmas has passed this year, calculate for next year
+        if (today > christmas)
+        {
+            christmas = new DateTime(today.Year + 1, 12, 25);
+        }
+
+        daysUntilChristmas = (christmas - today).Days;
+    }
+
+    private DateTime GetThanksgivingDate(int year)
+    {
+        // Thanksgiving is the 4th Thursday of November
+        var november1 = new DateTime(year, 11, 1);
+        var firstThursday = november1;
+
+        // Find first Thursday
+        while (firstThursday.DayOfWeek != DayOfWeek.Thursday)
+        {
+            firstThursday = firstThursday.AddDays(1);
+        }
+
+        // Add 3 weeks to get 4th Thursday
+        return firstThursday.AddDays(21);
+    }
+
+    private async Task InitializeChart()
+    {
+        try
+        {
+            // Generate date range from October 1 to December 25
+            var today = DateTime.Today;
+            var currentYear = today.Year;
+
+            // If we're past Christmas, use next year's dates
+            if (today.Month == 1 && today.Day < 10)
+            {
+                currentYear = today.Year - 1;
+            }
+
+            var startDate = new DateTime(currentYear, 10, 1);
+            var endDate = new DateTime(currentYear, 12, 25);
+
+            // Create all dates in range
+            var dateRange = new List<DateTime>();
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                dateRange.Add(date);
+            }
+
+            // Aggregate items created per day
+            var createdCounts = new Dictionary<DateTime, int>();
+            var claimedCounts = new Dictionary<DateTime, int>();
+
+            foreach (var list in AllLists)
+            {
+                foreach (var item in list.List)
+                {
+                    // Count items created
+                    if (!string.IsNullOrWhiteSpace(item.DateUpdated) &&
+                        DateTime.TryParse(item.DateUpdated, out DateTime createdDate))
+                    {
+                        var dateOnly = createdDate.Date;
+                        if (dateOnly >= startDate && dateOnly <= endDate)
+                        {
+                            if (!createdCounts.ContainsKey(dateOnly))
+                                createdCounts[dateOnly] = 0;
+                            createdCounts[dateOnly]++;
+                        }
+                    }
+
+                    // Count items claimed
+                    if (!string.IsNullOrWhiteSpace(item.DateClaimed) &&
+                        DateTime.TryParse(item.DateClaimed, out DateTime claimedDate))
+                    {
+                        var dateOnly = claimedDate.Date;
+                        if (dateOnly >= startDate && dateOnly <= endDate)
+                        {
+                            if (!claimedCounts.ContainsKey(dateOnly))
+                                claimedCounts[dateOnly] = 0;
+                            claimedCounts[dateOnly]++;
+                        }
+                    }
+                }
+            }
+
+            // Prepare data for Chart.js
+            var labels = new List<string>();
+            var createdValues = new List<int>();
+            var claimedValues = new List<int>();
+            var currentDateIndex = -1;
+            var thanksgivingIndex = -1;
+            var blackFridayIndex = -1;
+            var christmasIndex = -1;
+
+            // Calculate Thanksgiving (4th Thursday of November)
+            var thanksgiving = GetThanksgivingDate(currentYear);
+            var blackFriday = thanksgiving.AddDays(1);
+            var christmas = new DateTime(currentYear, 12, 25);
+
+            for (int i = 0; i < dateRange.Count; i++)
+            {
+                var date = dateRange[i];
+
+                // Format label - show month/day for first of month and every 7 days
+                string label;
+                if (date.Day == 1 || i % 7 == 0)
+                {
+                    label = date.ToString("MMM d");
+                }
+                else
+                {
+                    label = date.Day.ToString();
+                }
+                labels.Add(label);
+
+                // Add counts (0 if no items on that day)
+                createdValues.Add(createdCounts.ContainsKey(date) ? createdCounts[date] : 0);
+                claimedValues.Add(claimedCounts.ContainsKey(date) ? claimedCounts[date] : 0);
+
+                // Track today's index
+                if (date.Date == today.Date)
+                {
+                    currentDateIndex = i;
+                }
+
+                // Track holiday indices
+                if (date.Date == thanksgiving.Date)
+                {
+                    thanksgivingIndex = i;
+                }
+                if (date.Date == blackFriday.Date)
+                {
+                    blackFridayIndex = i;
+                }
+                if (date.Date == christmas.Date)
+                {
+                    christmasIndex = i;
+                }
+            }
+
+            // Call JavaScript to render chart
+            var createdData = new { labels, values = createdValues };
+            var claimedData = new { values = claimedValues };
+
+            await JSRuntime.InvokeVoidAsync(
+                "initChristmasActivityChart",
+                canvasId,
+                createdData,
+                claimedData,
+                currentDateIndex,
+                thanksgivingIndex,
+                blackFridayIndex,
+                christmasIndex
+            );
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error initializing chart: {ex.Message}");
+        }
+    }
+}
