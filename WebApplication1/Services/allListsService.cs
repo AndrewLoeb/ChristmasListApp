@@ -48,6 +48,25 @@ namespace WebApplication1.Services
             }
         }
 
+        /// <summary>
+        /// Loads data for external users - only users with VisibleToExternal = true.
+        /// </summary>
+        public Task LoadExternalUserData(googleSheetsListService listService)
+        {
+            // Get only users visible to external users
+            var externalVisibleUsers = listService.GetExternalVisibleUsers();
+
+            // Load lists for these users
+            var externalLists = listService.GetAllLists(externalVisibleUsers);
+
+            // Set the filtered data
+            userList = externalVisibleUsers;
+            AllLists = externalLists;
+            LastRefreshed = DateTime.Now;
+
+            return Task.CompletedTask;
+        }
+
 
     }
 }

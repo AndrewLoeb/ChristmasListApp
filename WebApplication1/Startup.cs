@@ -32,6 +32,7 @@ namespace WebApplication1
             services.AddScoped<userIdService>();
             services.AddScoped<allListsService>();
             services.AddScoped<LocalStorageService>();
+            services.AddScoped<ExternalAccessService>();
             services.AddBlazoredToast();
         }
 

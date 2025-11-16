@@ -1,0 +1,434 @@
+@using WebApplication1.Models
+@using WebApplication1.Services
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@inject googleSheetsListService ListService
+@inject ExternalAccessService ExternalAccessService
+@inject allListsService allListsService
+@inject IJSRuntime JSRuntime
+
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@inject IToastService toastService
+
+<div class="d-flex justify-content-end align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3">
+        <small class="text-muted">
+            Last updated: @GetRelativeTime(allListsService.LastRefreshed)
+        </small>
+        <button class="btn btn-sm btn-outline-primary" @onclick="ManualRefresh" disabled="@isRefreshing">
+            @if (isRefreshing)
+            {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <span>Refreshing...</span>
+            }
+            else
+            {
+                <span>🔄 Refresh</span>
+            }
+        </button>
+    </div>
+</div>
+
+<!-- Two-Column Layout: Person Selector | List Display -->
+<div class="list-review-container">
+    <!-- Left Sidebar: Person Selection (No Family Grouping) -->
+    <div class="list-review-sidebar">
+        <div class="family-selection-container">
+            <div class="person-cards-simple">
+                    @foreach (var person in allListsService.AllLists)
+                    {
+                        var cardColorClass = GetCardColorClass(person);
+                        var isSelected = listUserId == person.Name;
+                        var myClaimedCount = GetMyClaimedCount(person);
+
+                        <div class="person-card @cardColorClass @(isSelected ? "selected" : "")"
+                             @onclick="() => SelectPerson(person.Name)">
+                            <div class="person-card-name">@person.Name</div>
+                            <div class="person-card-summary">
+                                <div class="person-card-summary-item">
+                                    <span>📝</span>
+                                    <span>@person.itemsListed</span>
+                                </div>
+                                <div class="person-card-summary-item">
+                                    <span>🎁</span>
+                                    <span>@person.itemsClaimed</span>
+                                </div>
+                                <div class="person-card-summary-item">
+                                    <span>🕐</span>
+                                    <span>@GetRelativeTime(person.lastUpdated, person.itemsListed)</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: List Display Section -->
+    <div class="list-review-main" id="list-review-main-panel">
+        <div class="list-review-section">
+            @if (string.IsNullOrEmpty(listUserId))
+            {
+                <div class="empty-state">
+                    <p>👈 Select a person from the left to view and claim their gifts</p>
+                </div>
+            }
+            else
+            {
+                <!-- List Header with Stats -->
+                <div class="list-review-header">
+                    <h3>@listUserId's List</h3>
+                    <div class="list-review-stats">
+                        <div class="list-review-stat-item">
+                            <span>📝</span>
+                            <span>@listUserItems.itemsListed items</span>
+                        </div>
+                        <div class="list-review-stat-item">
+                            <span>🎁</span>
+                            <span>@listUserItems.itemsClaimed claimed</span>
+                        </div>
+                        <div class="list-review-stat-item">
+                            <span>🕐</span>
+                            <span>@(listUserItems.itemsListed == 0 ? "No updates" : $"Updated {GetRelativeTime(listUserItems.lastUpdated, listUserItems.itemsListed)}")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item Cards Masonry -->
+                <div class="item-cards-masonry">
+                    @foreach (ItemModel item in listUserItems.List)
+                    {
+                        var itemCardClass = GetItemCardClass(item);
+                        <div class="card mb-3 @itemCardClass @(item.Link != "" ? "card-with-link" : "")" id="item-card-@item.ItemId">
+                            @if (item.Link != "")
+                            {
+                                <div class="external-link-icon">↗</div>
+                                <a href="@item.Link" target="_blank" class="stretched-link"></a>
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    @item.Item
+                                </h5>
+                                <p class="card-text">
+                                    @item.Notes
+                                </p>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" class="card-img-bottom" alt="@item.Item" style="max-height: 140px; object-fit: contain; padding: 10px;" />
+                            }
+                            <div class="card-footer item-card-footer">
+                                <div class="item-timestamp">
+                                    <span>🕐</span>
+                                    <span>@GetItemRelativeTime(item.DateUpdated)</span>
+                                </div>
+                                <div class="item-action">
+                                    @if (item.Claimer == ExternalAccessService.ExternalUserName)
+                                    {
+                                        <button class="btn btn-unclaim" @onclick="() => unclaimItem(item)">
+                                            <span>↩</span>
+                                            <span>Unclaim</span>
+                                        </button>
+                                    }
+                                    else if (item.Claimer == "")
+                                    {
+                                        <button class="btn btn-claim" @onclick="() => claimItem(item)">
+                                            <span>🎁</span>
+                                            <span>Claim!</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <div class="item-claimed-badge">
+                                            <span>✓</span>
+                                            <span>Claimed</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <hr />
+
+                <h3 class="mb-3">Notes:</h3>
+                <p> @listUserNotes </p>
+            }
+        </div>
+    </div>
+</div>
+
+@implements IDisposable
+
+@code {
+    public string listUserId = "";
+    private System.Timers.Timer refreshTimer;
+    private bool isRefreshing = false;
+
+    public dynamic listUserNotes => allListsService.userList.FirstOrDefault(u => u.Name == listUserId)?.Notes;
+    public dynamic listUserItems => allListsService.AllLists.FirstOrDefault(u => u.Name == listUserId);
+
+    protected override void OnInitialized()
+    {
+        // Setup 5-minute auto-refresh timer
+        refreshTimer = new System.Timers.Timer(300000); // 5 minutes in milliseconds
+        refreshTimer.Elapsed += async (sender, e) => await AutoRefresh();
+        refreshTimer.AutoReset = true;
+        refreshTimer.Start();
+    }
+
+    private async Task AutoRefresh()
+    {
+        try
+        {
+            await allListsService.LoadExternalUserData(ListService);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Auto-refresh failed: {ex.Message}");
+        }
+    }
+
+    private async Task ManualRefresh()
+    {
+        isRefreshing = true;
+        StateHasChanged();
+
+        try
+        {
+            await allListsService.LoadExternalUserData(ListService);
+            toastService.ShowSuccess("Data refreshed successfully");
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Error refreshing data: {ex.Message}");
+        }
+        finally
+        {
+            isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Stop();
+        refreshTimer?.Dispose();
+    }
+
+    // Calculate items claimed by external user for a specific person
+    private int GetMyClaimedCount(ListModel list)
+    {
+        return list.List.Count(item => item.Claimer == ExternalAccessService.ExternalUserName);
+    }
+
+    // Get CSS class for person card based on status
+    private string GetCardColorClass(ListModel list)
+    {
+        if (list.itemsListed == 0)
+        {
+            return "person-card-grey";
+        }
+        else if (GetMyClaimedCount(list) > 0)
+        {
+            return "person-card-green";
+        }
+        else
+        {
+            return "person-card-blue";
+        }
+    }
+
+    // Get CSS class for item card based on claim status
+    private string GetItemCardClass(ItemModel item)
+    {
+        if (item.Claimer == ExternalAccessService.ExternalUserName)
+        {
+            return "item-card-claimed-by-me";
+        }
+        else if (string.IsNullOrEmpty(item.Claimer))
+        {
+            return "item-card-unclaimed";
+        }
+        else
+        {
+            return "item-card-claimed-by-other";
+        }
+    }
+
+    // Format relative time (3h, 2d, 1w2d)
+    private string GetRelativeTime(DateTime lastUpdated, int itemsListed = -1)
+    {
+        // If user has no items, show placeholder
+        if (itemsListed == 0)
+        {
+            return "--";
+        }
+
+        var now = DateTime.Now;
+        var diff = now - lastUpdated;
+
+        if (diff.TotalDays >= 7)
+        {
+            int weeks = (int)(diff.TotalDays / 7);
+            int days = (int)(diff.TotalDays % 7);
+            return days > 0 ? $"{weeks}w{days}d" : $"{weeks}w";
+        }
+        else if (diff.TotalDays >= 1)
+        {
+            return $"{(int)diff.TotalDays}d";
+        }
+        else if (diff.TotalHours >= 1)
+        {
+            return $"{(int)diff.TotalHours}h";
+        }
+        else
+        {
+            return $"{(int)diff.TotalMinutes}m";
+        }
+    }
+
+    // Format relative time for items (parses string DateUpdated)
+    private string GetItemRelativeTime(string dateUpdatedStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateUpdatedStr))
+        {
+            return "unknown";
+        }
+
+        if (DateTime.TryParse(dateUpdatedStr, out DateTime dateUpdated))
+        {
+            return GetRelativeTime(dateUpdated);
+        }
+        else
+        {
+            // If parsing fails, return the original string
+            return dateUpdatedStr;
+        }
+    }
+
+    // Select a person to view their list
+    private async Task SelectPerson(string personName)
+    {
+        listUserId = personName;
+        StateHasChanged();
+
+        // Auto-scroll the list panel to top when person is selected
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollElementToTop", "list-review-main-panel");
+        }
+        catch
+        {
+            // Silently fail if scroll doesn't work
+        }
+    }
+
+    public async Task claimItem(ItemModel item)
+    {
+        try
+        {
+            // Trigger claiming animation (optimistic UI)
+            await JSRuntime.InvokeVoidAsync("triggerClaimAnimation", item.ItemId);
+        }
+        catch (Exception)
+        {
+            // Animation failed, continue anyway
+        }
+
+        try
+        {
+            // PRE-FLIGHT CHECK: Read current item state from Google Sheets
+            var currentItem = ListService.GetItemById(item.ItemId);
+
+            // Check for conflicts: Is the item still unclaimed?
+            if (!string.IsNullOrEmpty(currentItem.Claimer))
+            {
+                // Conflict detected: Someone else claimed it
+                toastService.ShowWarning($"This item was just claimed by {currentItem.Claimer}");
+
+                // Refresh all data to show correct state
+                await allListsService.LoadExternalUserData(ListService);
+                StateHasChanged();
+                return;
+            }
+
+            // No conflict: Proceed with claim
+            ListService.ClaimItem(item.ItemId, ExternalAccessService.ExternalUserName);
+
+            // Refresh all data from Google Sheets to get updated counts
+            await allListsService.LoadExternalUserData(ListService);
+
+            // Force re-render to update the UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Error occurred
+            toastService.ShowError($"Failed to claim item: {ex.Message}");
+
+            // Refresh data to restore correct state
+            await allListsService.LoadExternalUserData(ListService);
+            StateHasChanged();
+        }
+    }
+
+    public async Task unclaimItem(ItemModel item)
+    {
+        try
+        {
+            // Trigger unclaiming animation (optimistic UI)
+            await JSRuntime.InvokeVoidAsync("triggerUnclaimAnimation", item.ItemId);
+        }
+        catch (Exception)
+        {
+            // Animation failed, continue anyway
+        }
+
+        try
+        {
+            // PRE-FLIGHT CHECK: Read current item state from Google Sheets
+            var currentItem = ListService.GetItemById(item.ItemId);
+
+            // Check for conflicts: Is the item still claimed by external user?
+            if (currentItem.Claimer != ExternalAccessService.ExternalUserName)
+            {
+                // Conflict detected: Someone else changed the claim status
+                if (string.IsNullOrEmpty(currentItem.Claimer))
+                {
+                    toastService.ShowWarning("This item has already been unclaimed");
+                }
+                else
+                {
+                    toastService.ShowWarning($"This item is now claimed by {currentItem.Claimer}");
+                }
+
+                // Refresh all data to show correct state
+                await allListsService.LoadExternalUserData(ListService);
+                StateHasChanged();
+                return;
+            }
+
+            // No conflict: Proceed with unclaim
+            ListService.UnclaimItem(item.ItemId);
+
+            // Refresh all data from Google Sheets to get updated counts
+            await allListsService.LoadExternalUserData(ListService);
+
+            // Force re-render to update the UI
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Error occurred
+            toastService.ShowError($"Failed to unclaim item: {ex.Message}");
+
+            // Refresh data to restore correct state
+            await allListsService.LoadExternalUserData(ListService);
+            StateHasChanged();
+        }
+    }
+}

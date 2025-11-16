@@ -1,0 +1,14 @@
+@page "/user"
+
+@using WebApplication1.Components
+@using Microsoft.AspNetCore.Components.Web
+
+@model UserPageModel
+
+@{
+    ViewData["Title"] = "Christmas List - External Access";
+}
+
+<div class="someclass">
+<component type="typeof(ExternalUserAccess)" render-mode="ServerPrerendered" param-Token="@Model.Token" />
+</div>

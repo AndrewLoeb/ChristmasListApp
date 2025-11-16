@@ -417,6 +417,59 @@ git diff                      # See changes
 
 ---
 
+## External User Access
+
+### Overview
+External users can access the app via `/user?token={token}` URLs to view and claim items from a subset of family members without login.
+
+### How It Works
+- **URL Pattern**: `/user?token=lisa` (query string token maps to external user name)
+- **Data Filtering**: Only shows users with `VisibleToExternal = TRUE` in Google Sheets Users table (Column F)
+- **Functionality**: External users can browse lists and claim/unclaim items
+- **Claimer Name**: Shows external user name (e.g., "Lisa") in Google Sheets
+- **Note**: Query string used instead of route parameter due to Blazor SignalR interactivity requirements
+
+### Components
+- **User.cshtml** / **UserPageModel** - Razor Page that hosts the external user component
+- **ExternalUserAccess.razor** - Main component, validates token and manages tabs (List Review | My Gifts)
+- **ExternalListReview.razor** - Browse and claim lists (simplified, no family grouping)
+- **ExternalMyGifts.razor** - View claimed items
+- **ExternalAccessService.cs** - Token validation and context management
+
+### Adding a New External User
+
+**Step 1: Update Token Mapping**
+Edit [ExternalAccessService.cs](../WebApplication1/Services/ExternalAccessService.cs):
+```csharp
+private static readonly Dictionary<string, string> TokenMapping = new Dictionary<string, string>
+{
+    { "lisa", "Lisa" },
+    { "john", "John" },  // Add new token here
+};
+```
+
+**Step 2: Configure Google Sheets**
+Set `VisibleToExternal = TRUE` for users the new external user should see.
+
+**Step 3: Test**
+Visit `/user?token=john` - John can now claim items as "John" in Google Sheets.
+
+**No other code changes needed!** The system is designed for easy extensibility.
+
+### Future Multi-User Scenarios
+
+**Option 1 (Current)**: Simple token mapping - all external users see same users (those with `VisibleToExternal = TRUE`)
+
+**Option 2**: Add multiple boolean columns in Users sheet:
+- `VisibleToLisa`, `VisibleToJohn`, etc.
+- Modify `LoadExternalUserData()` to filter by specific column
+
+**Option 3**: Create ExternalAccess sheet with many-to-many mapping:
+- Columns: `Token`, `ExternalUserName`, `VisibleUserIds` (comma-separated)
+- More flexible but requires data model changes
+
+---
+
 ## Questions to Ask User
 
 If uncertain about implementation choices:

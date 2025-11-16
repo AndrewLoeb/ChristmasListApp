@@ -88,13 +88,13 @@ namespace WebApplication1.Services
             return ExecuteWithRetry(() =>
             {
                 var myUserList = new List<UserModel>();
-                var range = $"{usersSheet}!A:E";
+                var range = $"{usersSheet}!A:F";  // Extended to column F for VisibleToExternal
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 // Ecexuting Read Operation...
                 var response = request.Execute();
-                // Getting all records from Column A to E...
+                // Getting all records from Column A to F...
                 IList<IList<object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
@@ -110,6 +110,9 @@ namespace WebApplication1.Services
                             Name = row[2].ToString(),
                             Password = row[3].ToString(),
                             Notes = row.Count > 4 && row[4] != null ? row[4].ToString() : "",
+                            VisibleToExternal = row.Count > 5 && row[5] != null &&
+                                (row[5].ToString().Equals("TRUE", StringComparison.OrdinalIgnoreCase) ||
+                                 row[5].ToString().Equals("1"))
                         };
 
                         myUserList.Add(myInv);
@@ -513,6 +516,15 @@ namespace WebApplication1.Services
             SpreadsheetsResource.BatchUpdateRequest Deletion = new SpreadsheetsResource.BatchUpdateRequest(service, DeleteRequest, SpreadsheetId);
             Deletion.Execute();
 
+        }
+
+        /// <summary>
+        /// Gets list of users who are visible to external users (VisibleToExternal = true).
+        /// </summary>
+        public List<UserModel> GetExternalVisibleUsers()
+        {
+            var allUsers = Users_GetList();
+            return allUsers.Where(u => u.VisibleToExternal).ToList();
         }
 
     }
