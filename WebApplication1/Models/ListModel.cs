@@ -19,7 +19,8 @@ namespace WebApplication1.Models
         public string Name { get; set; }
         public string Password { get; set; }
         public string Notes { get; set; }
-        public bool VisibleToExternal { get; set; }
+        public bool VisibleToLisa { get; set; }
+        public bool VisibleToGano { get; set; }
     }
 
     public class ItemModel

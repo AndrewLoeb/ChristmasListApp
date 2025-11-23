@@ -88,13 +88,13 @@ namespace WebApplication1.Services
             return ExecuteWithRetry(() =>
             {
                 var myUserList = new List<UserModel>();
-                var range = $"{usersSheet}!A:F";  // Extended to column F for VisibleToExternal
+                var range = $"{usersSheet}!A:G";  // Extended to column G for VisibleToGano
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 // Ecexuting Read Operation...
                 var response = request.Execute();
-                // Getting all records from Column A to F...
+                // Getting all records from Column A to G...
                 IList<IList<object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
@@ -110,9 +110,12 @@ namespace WebApplication1.Services
                             Name = row[2].ToString(),
                             Password = row[3].ToString(),
                             Notes = row.Count > 4 && row[4] != null ? row[4].ToString() : "",
-                            VisibleToExternal = row.Count > 5 && row[5] != null &&
+                            VisibleToLisa = row.Count > 5 && row[5] != null &&
                                 (row[5].ToString().Equals("TRUE", StringComparison.OrdinalIgnoreCase) ||
-                                 row[5].ToString().Equals("1"))
+                                 row[5].ToString().Equals("1")),
+                            VisibleToGano = row.Count > 6 && row[6] != null &&
+                                (row[6].ToString().Equals("TRUE", StringComparison.OrdinalIgnoreCase) ||
+                                 row[6].ToString().Equals("1"))
                         };
 
                         myUserList.Add(myInv);
@@ -519,12 +522,24 @@ namespace WebApplication1.Services
         }
 
         /// <summary>
-        /// Gets list of users who are visible to external users (VisibleToExternal = true).
+        /// Gets list of users who are visible to a specific external user.
         /// </summary>
-        public List<UserModel> GetExternalVisibleUsers()
+        /// <param name="externalUserName">The external user name (e.g., "Lisa", "Gano")</param>
+        public List<UserModel> GetExternalVisibleUsers(string externalUserName)
         {
             var allUsers = Users_GetList();
-            return allUsers.Where(u => u.VisibleToExternal).ToList();
+
+            // Filter based on which external user is requesting
+            switch (externalUserName)
+            {
+                case "Lisa":
+                    return allUsers.Where(u => u.VisibleToLisa).ToList();
+                case "Gano":
+                    return allUsers.Where(u => u.VisibleToGano).ToList();
+                default:
+                    // Unknown external user - return empty list
+                    return new List<UserModel>();
+            }
         }
 
     }

@@ -347,6 +347,8 @@ These have been consciously deferred or rejected:
 3. Name (string)
 4. Password (string)
 5. Notes (string)
+6. VisibleToLisa (bool) - TRUE/FALSE for Lisa's external access
+7. VisibleToGano (bool) - TRUE/FALSE for Gano's external access
 
 **Important:** Changes to sheet structure require updates in `googleSheetsListService.cs` data parsing methods.
 
@@ -420,14 +422,20 @@ git diff                      # See changes
 ## External User Access
 
 ### Overview
-External users can access the app via `/user?token={token}` URLs to view and claim items from a subset of family members without login.
+External users can access the app via `/user?token={token}` URLs to view and claim items from a subset of family members without login. Each external user sees a personalized subset of family members based on per-user visibility columns.
 
 ### How It Works
-- **URL Pattern**: `/user?token=lisa` (query string token maps to external user name)
-- **Data Filtering**: Only shows users with `VisibleToExternal = TRUE` in Google Sheets Users table (Column F)
+- **URL Pattern**: `/user?token=lisa` or `/user?token=gano` (query string token maps to external user name)
+- **Data Filtering**: Uses per-external-user visibility columns in Google Sheets Users table:
+  - Column F: `VisibleToLisa` (TRUE/FALSE)
+  - Column G: `VisibleToGano` (TRUE/FALSE)
 - **Functionality**: External users can browse lists and claim/unclaim items
-- **Claimer Name**: Shows external user name (e.g., "Lisa") in Google Sheets
+- **Claimer Name**: Shows external user name (e.g., "Lisa", "Gano") in Google Sheets
 - **Note**: Query string used instead of route parameter due to Blazor SignalR interactivity requirements
+
+### Current External Users
+- **Lisa**: Token `lisa` - sees family members marked `VisibleToLisa = TRUE`
+- **Gano**: Token `gano` - sees family members marked `VisibleToGano = TRUE`
 
 ### Components
 - **User.cshtml** / **UserPageModel** - Razor Page that hosts the external user component
@@ -438,35 +446,62 @@ External users can access the app via `/user?token={token}` URLs to view and cla
 
 ### Adding a New External User
 
-**Step 1: Update Token Mapping**
+**Step 1: Add Column to Google Sheets Users Table**
+- Add new column (e.g., Column H: `VisibleToJohn`)
+- Set TRUE/FALSE for each family member based on what this external user should see
+
+**Step 2: Update UserModel**
+Edit [ListModel.cs](../WebApplication1/Models/ListModel.cs):
+```csharp
+public class UserModel
+{
+    // ... existing properties ...
+    public bool VisibleToLisa { get; set; }
+    public bool VisibleToGano { get; set; }
+    public bool VisibleToJohn { get; set; }  // Add new property
+}
+```
+
+**Step 3: Update Google Sheets Service Parsing**
+Edit [googleSheetsListService.cs](../WebApplication1/Services/googleSheetsListService.cs):
+- Update range from `A:G` to `A:H` in `Users_GetList()`
+- Add parsing for new column:
+```csharp
+VisibleToJohn = row.Count > 7 && row[7] != null &&
+    (row[7].ToString().Equals("TRUE", StringComparison.OrdinalIgnoreCase) ||
+     row[7].ToString().Equals("1"))
+```
+- Add case in `GetExternalVisibleUsers()`:
+```csharp
+case "John":
+    return allUsers.Where(u => u.VisibleToJohn).ToList();
+```
+
+**Step 4: Update Token Mapping**
 Edit [ExternalAccessService.cs](../WebApplication1/Services/ExternalAccessService.cs):
 ```csharp
 private static readonly Dictionary<string, string> TokenMapping = new Dictionary<string, string>
 {
     { "lisa", "Lisa" },
-    { "john", "John" },  // Add new token here
+    { "gano", "Gano" },
+    { "john", "John" }  // Add new token here
 };
 ```
 
-**Step 2: Configure Google Sheets**
-Set `VisibleToExternal = TRUE` for users the new external user should see.
+**Step 5: Test**
+Visit `/user?token=john` - John can now claim items as "John" and see only their designated family members.
 
-**Step 3: Test**
-Visit `/user?token=john` - John can now claim items as "John" in Google Sheets.
+### Architecture Notes
 
-**No other code changes needed!** The system is designed for easy extensibility.
+**Data Model:**
+- Each external user has their own visibility column in Google Sheets Users table
+- `LoadExternalUserData(listService, externalUserName)` filters by the appropriate column
+- This allows each external user to see different subsets of family members
 
-### Future Multi-User Scenarios
-
-**Option 1 (Current)**: Simple token mapping - all external users see same users (those with `VisibleToExternal = TRUE`)
-
-**Option 2**: Add multiple boolean columns in Users sheet:
-- `VisibleToLisa`, `VisibleToJohn`, etc.
-- Modify `LoadExternalUserData()` to filter by specific column
-
-**Option 3**: Create ExternalAccess sheet with many-to-many mapping:
-- Columns: `Token`, `ExternalUserName`, `VisibleUserIds` (comma-separated)
-- More flexible but requires data model changes
+**Extensibility:**
+- Current implementation supports 2 external users (Lisa, Gano)
+- Can easily add more by following the steps above
+- For many external users (5+), consider refactoring to a separate ExternalAccess sheet with many-to-many mapping
 
 ---
 

@@ -13,9 +13,8 @@ namespace WebApplication1.Services
         // Token to external user name mapping
         private static readonly Dictionary<string, string> TokenMapping = new Dictionary<string, string>
         {
-            { "lisa", "Lisa" }
-            // Future external users can be added here:
-            // { "john", "John" },
+            { "lisa", "Lisa" },
+            { "gano", "Gano" }
         };
 
         public string ExternalUserName { get; private set; }

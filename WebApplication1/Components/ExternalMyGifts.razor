@@ -163,7 +163,7 @@ else
                 ListService.UnclaimItem(itemToUnclaim.ItemId);
 
                 // Refresh all data from Google Sheets
-                await allListsService.LoadExternalUserData(ListService);
+                await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
 
                 toastService.ShowSuccess($"Unclaimed {itemToUnclaim.Item} for {itemToUnclaim.Name}");
 

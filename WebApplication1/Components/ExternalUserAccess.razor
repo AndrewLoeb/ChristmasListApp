@@ -82,8 +82,8 @@ else
         {
             try
             {
-                // Load external user data (filtered by VisibleToExternal)
-                await allListsService.LoadExternalUserData(ListService);
+                // Load external user data (filtered by specific external user)
+                await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
                 isLoading = false;
             }
             catch (Exception ex)

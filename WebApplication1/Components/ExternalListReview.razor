@@ -183,7 +183,7 @@
     {
         try
         {
-            await allListsService.LoadExternalUserData(ListService);
+            await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
@@ -199,7 +199,7 @@
 
         try
         {
-            await allListsService.LoadExternalUserData(ListService);
+            await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
             toastService.ShowSuccess("Data refreshed successfully");
         }
         catch (Exception ex)
@@ -351,7 +351,7 @@
                 toastService.ShowWarning($"This item was just claimed by {currentItem.Claimer}");
 
                 // Refresh all data to show correct state
-                await allListsService.LoadExternalUserData(ListService);
+                await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
                 StateHasChanged();
                 return;
             }
@@ -360,7 +360,7 @@
             ListService.ClaimItem(item.ItemId, ExternalAccessService.ExternalUserName);
 
             // Refresh all data from Google Sheets to get updated counts
-            await allListsService.LoadExternalUserData(ListService);
+            await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
 
             // Force re-render to update the UI
             StateHasChanged();
@@ -371,7 +371,7 @@
             toastService.ShowError($"Failed to claim item: {ex.Message}");
 
             // Refresh data to restore correct state
-            await allListsService.LoadExternalUserData(ListService);
+            await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
             StateHasChanged();
         }
     }
@@ -407,7 +407,7 @@
                 }
 
                 // Refresh all data to show correct state
-                await allListsService.LoadExternalUserData(ListService);
+                await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
                 StateHasChanged();
                 return;
             }
@@ -416,7 +416,7 @@
             ListService.UnclaimItem(item.ItemId);
 
             // Refresh all data from Google Sheets to get updated counts
-            await allListsService.LoadExternalUserData(ListService);
+            await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
 
             // Force re-render to update the UI
             StateHasChanged();
@@ -427,7 +427,7 @@
             toastService.ShowError($"Failed to unclaim item: {ex.Message}");
 
             // Refresh data to restore correct state
-            await allListsService.LoadExternalUserData(ListService);
+            await allListsService.LoadExternalUserData(ListService, ExternalAccessService.ExternalUserName);
             StateHasChanged();
         }
     }
