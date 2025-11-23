@@ -831,6 +831,25 @@ textarea:focus {
     transition: color 0.4s ease;
 }
 
+/* ============================================
+   Starred Item Styles
+   ============================================ */
+
+/* Most Wanted badge styling */
+.most-wanted-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #F5DEB3 0%, #D4AF37 100%);
+    color: #6B4423;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.65rem;
+    border: 1px solid #C5A028;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
 /* Claim animation keyframes */
 @keyframes claimPop {
     0% {

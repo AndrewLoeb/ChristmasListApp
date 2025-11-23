@@ -39,6 +39,7 @@ namespace WebApplication1.Models
         public string ImageUrl { get; set; }
         public decimal? Price { get; set; }  // Nullable - may not always have price
         public string MetadataFetchedDate { get; set; }  // When we last scraped this link
+        public int IsStarred { get; set; }  // 0 = not starred, 1 = starred (most wanted)
     }
     public class ListModel
     {

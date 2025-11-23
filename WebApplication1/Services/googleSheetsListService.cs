@@ -150,7 +150,7 @@ namespace WebApplication1.Services
             return ExecuteWithRetry(() =>
             {
                 var AllItems = new List<ItemModel>();
-                var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
+                var range = $"{itemSheet}!A:M";  // Extended to column M for IsStarred field
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
@@ -182,6 +182,8 @@ namespace WebApplication1.Services
                                     ? decimal.Parse(row[10].ToString())
                                     : (decimal?)null,
                                 MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
+                                // Read IsStarred field (column M) - defaults to 0 if missing
+                                IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0
                             };
 
                             AllItems.Add(myItem);
@@ -202,13 +204,13 @@ namespace WebApplication1.Services
             {
                 System.Diagnostics.Debug.WriteLine($"List request for: {userId}");
                 var MyList = new List<ItemModel>();
-                var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
+                var range = $"{itemSheet}!A:M";  // Extended to column M for IsStarred field
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 // Ecexuting Read Operation...
                 var response = request.Execute();
-                // Getting all records from Column A to L...
+                // Getting all records from Column A to M...
                 IList<IList<object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
@@ -234,6 +236,8 @@ namespace WebApplication1.Services
                                 ? decimal.Parse(row[10].ToString())
                                 : (decimal?)null,
                             MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
+                            // Read IsStarred field (column M) - defaults to 0 if missing
+                            IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0
                         };
 
                         if (myItem.Active == 1)
@@ -294,14 +298,14 @@ namespace WebApplication1.Services
         public void AddItem(string userId, string newItemItem, string newItemNotes, string newItemLink, string imageUrl = "", decimal? price = null, string metadataFetchedDate = "")
         {
             // Specifying Column Range for reading...
-            var range = $"{itemSheet}!A:L";  // Extended to column L for new metadata fields
+            var range = $"{itemSheet}!A:M";  // Extended to column M for IsStarred field
             var valueRange = new ValueRange();
 
             //var myInvList = Spices_GetList();
             List<ItemModel> AllLists = GetAllItems();
             int maxId = AllLists.Max(i => i.ItemId);
 
-            // Columns: A-I (existing) + J-L (new metadata fields)
+            // Columns: A-I (existing) + J-M (metadata + IsStarred)
             var newItem = new List<object>() {
                 maxId+1,              // A: ItemId
                 userId,               // B: Name
@@ -314,7 +318,8 @@ namespace WebApplication1.Services
                 1,                    // I: Active
                 imageUrl,             // J: ImageUrl
                 price?.ToString() ?? "", // K: Price (convert to string for Google Sheets)
-                metadataFetchedDate   // L: MetadataFetchedDate
+                metadataFetchedDate,  // L: MetadataFetchedDate
+                0                     // M: IsStarred (default to not starred)
             };
             valueRange.Values = new List<IList<object>> { newItem };
             // Append the above record...
@@ -388,12 +393,36 @@ namespace WebApplication1.Services
             var appendReponse = updateRequest.Execute();
         }
 
+        public void StarItem(int itemId)
+        {
+            var range = $"{itemSheet}!M{itemId + 1}:M{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { "1" };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
+        public void UnstarItem(int itemId)
+        {
+            var range = $"{itemSheet}!M{itemId + 1}:M{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { "0" };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
         public ItemModel GetItemById(int itemId)
         {
             return ExecuteWithRetry(() =>
             {
                 // Read the specific row for this itemId
-                var range = $"{itemSheet}!A{itemId + 1}:L{itemId + 1}";
+                var range = $"{itemSheet}!A{itemId + 1}:M{itemId + 1}";
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 var response = request.Execute();
@@ -418,6 +447,8 @@ namespace WebApplication1.Services
                             ? decimal.Parse(row[10].ToString())
                             : (decimal?)null,
                         MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
+                        // Read IsStarred field (column M) - defaults to 0 if missing
+                        IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0
                     };
                     return item;
                 }

@@ -97,7 +97,7 @@
 
                 <!-- Item Cards Masonry -->
                 <div class="item-cards-masonry">
-                    @foreach (ItemModel item in listUserItems.List)
+                    @foreach (ItemModel item in ((List<ItemModel>)listUserItems.List).OrderByDescending(i => i.IsStarred).ThenBy(i => i.ItemId))
                     {
                         var itemCardClass = GetItemCardClass(item);
                         <div class="card mb-3 @itemCardClass @(item.Link != "" ? "card-with-link" : "")" id="item-card-@item.ItemId">
@@ -120,6 +120,10 @@
                             }
                             <div class="card-footer item-card-footer">
                                 <div class="item-timestamp">
+                                    @if (item.IsStarred == 1)
+                                    {
+                                        <span class="most-wanted-badge">⭐ Most Wanted</span>
+                                    }
                                     <span>🕐</span>
                                     <span>@GetItemRelativeTime(item.DateUpdated)</span>
                                 </div>

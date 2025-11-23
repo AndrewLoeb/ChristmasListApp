@@ -51,6 +51,7 @@
         <tr>
             <td>
                 <div class="btn-group" role="group" aria-label="@($"Actions for {item.Item}")">
+                    <button type="button" class="btn btn-secondary" @onclick="() => toggleStar(item)" aria-label="@($"{(item.IsStarred == 1 ? "Unstar" : "Star")} {item.Item}")">@(item.IsStarred == 1 ? "⭐" : "☆")</button>
                     <button type="button" class="btn btn-secondary" @onclick="() => editItem(item)" aria-label="@($"Edit {item.Item}")">Edit</button>
                     <button type="button" class="btn btn-secondary" @onclick="() => showDeleteConfirmation(item)" aria-label="@($"Delete {item.Item}")">Delete</button>
                 </div>
@@ -465,6 +466,38 @@ else
                 // Refresh the list
                 _myList = null;
             }
+        }
+
+        public void toggleStar(ItemModel item)
+        {
+            // Prevent starring if an item is being edited
+            if (editItemId != 0)
+            {
+                toastService.ShowWarning("Please save or cancel the current item first.");
+                return;
+            }
+
+            // Prevent starring if notes are being edited
+            if (editNotesFlag == 1)
+            {
+                toastService.ShowWarning("Please save or cancel your notes edit first.");
+                return;
+            }
+
+            // Toggle the star status
+            if (item.IsStarred == 1)
+            {
+                ListService.UnstarItem(item.ItemId);
+                toastService.ShowSuccess("Unstarred " + item.Item);
+            }
+            else
+            {
+                ListService.StarItem(item.ItemId);
+                toastService.ShowSuccess("Starred " + item.Item + "!");
+            }
+
+            // Refresh the list
+            _myList = null;
         }
 
         private string FormatDateTime(string dateTimeStr)
