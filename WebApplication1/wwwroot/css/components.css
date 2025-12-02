@@ -929,3 +929,51 @@ textarea:focus {
     outline: none;
     z-index: 1;
 }
+
+/* ============================================
+   Tinsel Tracker Styles
+   ============================================ */
+
+/* Receiver section container with subtle border */
+.receiver-section-container {
+    margin-bottom: 2rem;
+    border: 2px solid var(--border-color-light);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    background-color: var(--color-white);
+}
+
+.receiver-header {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-primary);
+}
+
+/* Tinsel Tracker table styles */
+.tinsel-table {
+    margin-bottom: 0;
+}
+
+.tinsel-table thead th {
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.tinsel-table-header {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+}
+
+.tinsel-table tbody td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    vertical-align: middle;
+}
+
+.tinsel-table-image {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+}

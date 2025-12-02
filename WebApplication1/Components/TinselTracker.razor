@@ -1,0 +1,131 @@
+@using WebApplication1.Models
+@using WebApplication1.Services
+@using WebApplication1.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject googleSheetsListService ListService
+@inject userIdService UserIdService
+
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@inject IToastService toastService
+@inject allListsService allListsService
+
+@if (!HasPermissions())
+{
+    <!-- User has no Tinsel Tracker permissions - hide page entirely -->
+    <div></div>
+}
+else if (!trackedItems.Any())
+{
+    <div class="empty-state">
+        <p>🎁 No one in your household has claimed any gifts yet. Check back later!</p>
+    </div>
+}
+else
+{
+    <!-- Group items by receiver -->
+    @foreach (var receiverGroup in GetItemsGroupedByReceiver())
+    {
+        var receiverName = receiverGroup.Key;
+        var items = receiverGroup.Value;
+
+        <div class="receiver-section-container mb-4">
+            <h4 class="receiver-header">
+                @receiverName
+                <span class="text-muted ms-2">(@items.Count @(items.Count == 1 ? "item" : "items"))</span>
+            </h4>
+
+            <div class="table-responsive-md">
+                <table class="table table-striped tinsel-table">
+                    <thead>
+                        <tr>
+                            <th width="100"></th>
+                            <th class="tinsel-table-header">Item</th>
+                            <th width="150" class="tinsel-table-header">Claimed By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in items)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.Item" class="tinsel-table-image" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">🎁</span>
+                                    }
+                                </td>
+                                <td><strong>@item.Item</strong></td>
+                                <td>@item.Claimer</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<ItemModel> _trackedItems;
+    private List<string> _allowedReceivers;
+
+    public List<ItemModel> trackedItems
+    {
+        get
+        {
+            if (_trackedItems == null)
+            {
+                try
+                {
+                    // Get the list of people (receivers) whose items we can track
+                    _allowedReceivers = ListService.GetTinselTrackerPermissionsForUser(UserIdService.userId);
+
+                    // Get all active claimed items WHERE:
+                    // - The item owner (receiver) is in our allowed list
+                    // - The item has been claimed by someone
+                    // - The claimer is NOT the current user (we don't need to see our own claims here)
+                    _trackedItems = ListService.GetAllItems()
+                        .Where(i => i.Active == 1)
+                        .Where(i => !string.IsNullOrEmpty(i.Claimer))
+                        .Where(i => _allowedReceivers.Contains(i.Name))
+                        .ToList();
+                }
+                catch (Exception ex)
+                {
+                    toastService.ShowError($"Error loading Tinsel Tracker: {ex.Message}");
+                    _trackedItems = new List<ItemModel>();
+                    _allowedReceivers = new List<string>();
+                }
+            }
+            return _trackedItems;
+        }
+    }
+
+    private bool HasPermissions()
+    {
+        try
+        {
+            if (_allowedReceivers == null)
+            {
+                _allowedReceivers = ListService.GetTinselTrackerPermissionsForUser(UserIdService.userId);
+            }
+            return _allowedReceivers.Any();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private Dictionary<string, List<ItemModel>> GetItemsGroupedByReceiver()
+    {
+        return trackedItems
+            .GroupBy(i => i.Name)
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.OrderBy(i => i.Claimer).ThenBy(i => i.Item).ToList());
+    }
+}

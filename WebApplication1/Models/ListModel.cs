@@ -50,4 +50,9 @@ namespace WebApplication1.Models
         public System.DateTime lastUpdated { get; set; }
         public string dropDownStr { get; set; }
     }
+    public class TinselTrackerPermissionModel
+    {
+        public string Viewer { get; set; }
+        public string CanSeeClaims { get; set; }
+    }
 }

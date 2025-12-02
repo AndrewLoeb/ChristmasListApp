@@ -86,6 +86,10 @@
             <button type="button" class="page-nav-btn @(tabIndex == 1 ? "active" : "")" @onclick="Set_MyList">My List</button>
             <button type="button" class="page-nav-btn @(tabIndex == 2 ? "active" : "")" @onclick="Set_ListReview">List Review</button>
             <button type="button" class="page-nav-btn @(tabIndex == 3 ? "active" : "")" @onclick="Set_MyGifts">My Gifts</button>
+            @if (HasTinselTrackerPermissions())
+            {
+                <button type="button" class="page-nav-btn @(tabIndex == 4 ? "active" : "")" @onclick="Set_TinselTracker">Tinsel Tracker</button>
+            }
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="text-muted">@UserIdService.userId</span>
@@ -105,6 +109,10 @@
         @if (tabIndex == 3)
         {
             <MyGifts></MyGifts>
+        }
+        @if (tabIndex == 4)
+        {
+            <TinselTracker></TinselTracker>
         }
     </div>
 }
@@ -243,4 +251,23 @@
     { tabIndex = 2; }
     public void Set_MyGifts()
     { tabIndex = 3; }
+    public void Set_TinselTracker()
+    { tabIndex = 4; }
+
+    private bool HasTinselTrackerPermissions()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(UserIdService.userId))
+                return false;
+
+            var permissions = ListService.GetTinselTrackerPermissionsForUser(UserIdService.userId);
+            return permissions.Any();
+        }
+        catch
+        {
+            // If there's an error (e.g., TinselTracker sheet doesn't exist yet), hide the button
+            return false;
+        }
+    }
 }

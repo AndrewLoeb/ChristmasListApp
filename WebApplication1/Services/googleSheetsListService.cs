@@ -573,5 +573,55 @@ namespace WebApplication1.Services
             }
         }
 
+        /// <summary>
+        /// Gets all Tinsel Tracker permissions from Google Sheets
+        /// </summary>
+        public List<TinselTrackerPermissionModel> GetTinselTrackerPermissions()
+        {
+            return ExecuteWithRetry(() =>
+            {
+                var permissions = new List<TinselTrackerPermissionModel>();
+                var range = "TinselTracker!A:B";
+                int j = 0;
+                SpreadsheetsResource.ValuesResource.GetRequest request =
+                        service.Spreadsheets.Values.Get(SpreadsheetId, range);
+                var response = request.Execute();
+                IList<IList<object>> values = response.Values;
+
+                if (values != null && values.Count > 0)
+                {
+                    foreach (var row in values)
+                    {
+                        j++;
+                        if (j > 1 && row.Count >= 2) // Skip header row
+                        {
+                            var permission = new TinselTrackerPermissionModel()
+                            {
+                                Viewer = row[0].ToString(),
+                                CanSeeClaims = row[1].ToString()
+                            };
+                            permissions.Add(permission);
+                        }
+                    }
+                }
+
+                return permissions;
+            }, "load Tinsel Tracker permissions");
+        }
+
+        /// <summary>
+        /// Gets the list of people whose claims a specific user can see in Tinsel Tracker
+        /// </summary>
+        /// <param name="userId">The viewer's user ID</param>
+        /// <returns>List of names whose claims this user can see</returns>
+        public List<string> GetTinselTrackerPermissionsForUser(string userId)
+        {
+            var allPermissions = GetTinselTrackerPermissions();
+            return allPermissions
+                .Where(p => p.Viewer == userId)
+                .Select(p => p.CanSeeClaims)
+                .ToList();
+        }
+
     }
 }
