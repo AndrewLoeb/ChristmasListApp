@@ -46,7 +46,15 @@ else
                             }
                         </td>
                         <td><strong>@item.Name</strong></td>
-                        <td>@item.Item</td>
+                        <td>
+                            @item.Item
+                            @if (!string.IsNullOrEmpty(item.ReceivedBy))
+                            {
+                                <span class="badge bg-success ms-2" title="Marked as received by @item.ReceivedBy">
+                                    ✓ Received by @item.ReceivedBy
+                                </span>
+                            }
+                        </td>
                         <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
                             @if (!string.IsNullOrWhiteSpace(item.Link))
                             {

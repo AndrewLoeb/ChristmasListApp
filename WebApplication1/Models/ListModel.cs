@@ -40,6 +40,7 @@ namespace WebApplication1.Models
         public decimal? Price { get; set; }  // Nullable - may not always have price
         public string MetadataFetchedDate { get; set; }  // When we last scraped this link
         public int IsStarred { get; set; }  // 0 = not starred, 1 = starred (most wanted)
+        public string ReceivedBy { get; set; }  // Name of household member who marked item as received
     }
     public class ListModel
     {

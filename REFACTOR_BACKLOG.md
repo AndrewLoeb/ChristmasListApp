@@ -10,6 +10,7 @@ This is your working list of improvements and refactoring tasks. Add, remove, an
 - [x] **Add delete confirmations** - Prevent accidental item deletion (MyList.razor:157-161)
 - [x] **Fix typo in method name** - `GetAllItmes` → `GetAllItems` (MyGifts.razor:34, service method)
 - [x] **Add error handling** - Show user-friendly messages when Google Sheets API fails
+- [ ] **Comments or anonymous notifications** - Method for users to send messages to the list owner. For example, if an item is sold out to request an alternative or to ask for more details
 
 ## 📋 Medium Priority
 

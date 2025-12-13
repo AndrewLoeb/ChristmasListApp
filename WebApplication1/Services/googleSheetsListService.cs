@@ -150,13 +150,13 @@ namespace WebApplication1.Services
             return ExecuteWithRetry(() =>
             {
                 var AllItems = new List<ItemModel>();
-                var range = $"{itemSheet}!A:M";  // Extended to column M for IsStarred field
+                var range = $"{itemSheet}!A:N";  // Extended to column N for ReceivedBy field
                 int j = 0;
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 // Ecexuting Read Operation...
                 var response = request.Execute();
-                // Getting all records from Column A to L...
+                // Getting all records from Column A to N...
                 IList<IList<object>> values = response.Values;
                 if (values != null && values.Count > 0)
                 {
@@ -183,7 +183,9 @@ namespace WebApplication1.Services
                                     : (decimal?)null,
                                 MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
                                 // Read IsStarred field (column M) - defaults to 0 if missing
-                                IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0
+                                IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0,
+                                // Read ReceivedBy field (column N) - empty string if missing
+                                ReceivedBy = row.Count > 13 && row[13] != null ? row[13].ToString() : ""
                             };
 
                             AllItems.Add(myItem);
@@ -417,12 +419,36 @@ namespace WebApplication1.Services
             var appendReponse = updateRequest.Execute();
         }
 
+        public void MarkItemReceived(int itemId, string receivedBy)
+        {
+            var range = $"{itemSheet}!N{itemId + 1}:N{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { receivedBy };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
+        public void UnmarkItemReceived(int itemId)
+        {
+            var range = $"{itemSheet}!N{itemId + 1}:N{itemId + 1}";
+            var valueRange = new ValueRange();
+            var oblist = new List<object>() { "" };
+            valueRange.Values = new List<IList<object>> { oblist };
+            // Performing Update Operation...
+            var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            var appendReponse = updateRequest.Execute();
+        }
+
         public ItemModel GetItemById(int itemId)
         {
             return ExecuteWithRetry(() =>
             {
                 // Read the specific row for this itemId
-                var range = $"{itemSheet}!A{itemId + 1}:M{itemId + 1}";
+                var range = $"{itemSheet}!A{itemId + 1}:N{itemId + 1}";
                 SpreadsheetsResource.ValuesResource.GetRequest request =
                         service.Spreadsheets.Values.Get(SpreadsheetId, range);
                 var response = request.Execute();
@@ -448,7 +474,9 @@ namespace WebApplication1.Services
                             : (decimal?)null,
                         MetadataFetchedDate = row.Count > 11 && row[11] != null ? row[11].ToString() : "",
                         // Read IsStarred field (column M) - defaults to 0 if missing
-                        IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0
+                        IsStarred = row.Count > 12 && row[12] != null && row[12].ToString() == "1" ? 1 : 0,
+                        // Read ReceivedBy field (column N) - empty string if missing
+                        ReceivedBy = row.Count > 13 && row[13] != null ? row[13].ToString() : ""
                     };
                     return item;
                 }

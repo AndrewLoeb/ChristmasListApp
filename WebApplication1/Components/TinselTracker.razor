@@ -42,6 +42,7 @@ else
                             <th width="100"></th>
                             <th class="tinsel-table-header">Item</th>
                             <th width="150" class="tinsel-table-header">Claimed By</th>
+                            <th width="100" class="tinsel-table-header">Received</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,6 +61,12 @@ else
                                 </td>
                                 <td><strong>@item.Item</strong></td>
                                 <td>@item.Claimer</td>
+                                <td>
+                                    <input type="checkbox"
+                                           checked="@(!string.IsNullOrEmpty(item.ReceivedBy))"
+                                           @onchange="@(async () => await ToggleReceivedStatus(item))"
+                                           aria-label="@($"Mark {item.Item} as received")" />
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -127,5 +134,41 @@ else
             .GroupBy(i => i.Name)
             .OrderBy(g => g.Key)
             .ToDictionary(g => g.Key, g => g.OrderBy(i => i.Claimer).ThenBy(i => i.Item).ToList());
+    }
+
+    private async Task ToggleReceivedStatus(ItemModel item)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(item.ReceivedBy))
+            {
+                // Mark as received by current user
+                ListService.MarkItemReceived(item.ItemId, UserIdService.userId);
+            }
+            else
+            {
+                // Unmark as received (clear the field)
+                ListService.UnmarkItemReceived(item.ItemId);
+                toastService.ShowInfo($"Unmarked {item.Item} as received");
+            }
+
+            // Refresh all data from Google Sheets
+            var refreshSuccess = await allListsService.RefreshAllData(ListService);
+
+            if (refreshSuccess)
+            {
+                // Reset cached items to force reload
+                _trackedItems = null;
+                StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowWarning("Item updated, but failed to refresh data. Please reload the page.");
+            }
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Error updating received status: {ex.Message}");
+        }
     }
 }
